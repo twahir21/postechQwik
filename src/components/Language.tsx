@@ -11,7 +11,7 @@ export const Translate = component$((props: { lang: string; keys: string[] }) =>
     try {
       const newTranslations: Record<string, string> = {};
       for (const key of props.keys) {
-        const res = await fetch(`http://qwik.mypostech.store/api/translate?lang=${props.lang}&key=${key}`);
+        const res = await fetch(`https://qwik.mypostech.store/api/translate?lang=${props.lang}&key=${key}`);
         const data = await res.json();
         newTranslations[key] = data.message || key; // Fallback to key if translation not found
       }

@@ -35,7 +35,7 @@ export const CrudPrdComponent =  component$((props: {lang: string}) => {
     isLoading.value = true;
     try {
       const res = await fetchWithLang(
-        `http://localhost:3000/products?search=${encodeURIComponent(search.value)}&page=${currentPage.value}&limit=${perPage}`,{
+        `https://api.mypostech.store/products?search=${encodeURIComponent(search.value)}&page=${currentPage.value}&limit=${perPage}`,{
           method: 'GET',
           credentials: 'include',
           headers: {
@@ -80,7 +80,7 @@ export const CrudPrdComponent =  component$((props: {lang: string}) => {
   
   const deleteProduct = $(async (productId: string) => {
     try {
-      const res = await fetchWithLang(`http://localhost:3000/products/${productId}`, {
+      const res = await fetchWithLang(`https://api.mypostech.store/products/${productId}`, {
         method: 'DELETE',
         credentials: 'include',
         headers: {
@@ -312,7 +312,7 @@ export const CrudPrdComponent =  component$((props: {lang: string}) => {
           class="px-4 py-2 bg-gray-700 text-white rounded"
           onClick$={async () => {
             try {
-              const res = await fetchWithLang(`http://localhost:3000/products/${selectedProduct.value!.id}`, {
+              const res = await fetchWithLang(`https://api.mypostech.store/products/${selectedProduct.value!.id}`, {
                 method: 'PUT',
                 headers: {
                   'Content-Type': 'application/json',

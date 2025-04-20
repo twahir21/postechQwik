@@ -26,7 +26,7 @@ export const CustomersCrudComponent =  component$((props: {lang: string }) => {
     isLoading.value = true;
     try {
       const res = await fetchWithLang(
-        `http://localhost:3000/customers?search=${encodeURIComponent(search.value)}&page=${currentPage.value}&limit=${perPage}`,{
+        `https://api.mypostech.store/customers?search=${encodeURIComponent(search.value)}&page=${currentPage.value}&limit=${perPage}`,{
           method: 'GET',
           credentials: 'include',
           headers: {
@@ -75,7 +75,7 @@ export const CustomersCrudComponent =  component$((props: {lang: string }) => {
   
   const deleteCustomers = $(async (customerId: string) => {
     try {
-      const res = await fetchWithLang(`http://localhost:3000/customers/${customerId}`, {
+      const res = await fetchWithLang(`https://api.mypostech.store/${customerId}`, {
         method: 'DELETE',
         credentials: 'include',
         headers: {
@@ -243,7 +243,7 @@ export const CustomersCrudComponent =  component$((props: {lang: string }) => {
           class="px-4 py-2 bg-gray-700 text-white rounded"
           onClick$={async () => {
             try {
-              const res = await fetchWithLang(`http://localhost:3000/customers/${selectedCustomer.value!.id}`, {
+              const res = await fetchWithLang(`https://api.mypostech.store/customers/${selectedCustomer.value!.id}`, {
                 method: 'PUT',
                 headers: {
                   'Content-Type': 'application/json',

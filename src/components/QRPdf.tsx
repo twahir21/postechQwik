@@ -20,7 +20,7 @@ export const QrPdf = component$((props: { lang: string }) => {
   useResource$(async ({ track }) => {
     track(() => qrCodeRefetch.value);
     try {
-      const response = await fetchWithLang('http://localhost:3000/check-isQrCode', {
+      const response = await fetchWithLang('https://api.mypostech.store/check-isQrCode', {
         method: 'GET',
         credentials: 'include',
       });
@@ -49,7 +49,7 @@ export const QrPdf = component$((props: { lang: string }) => {
       store.isLoading = true; // Set loading state to true
 
       // Call the backend API to generate QR codes
-      const response = await fetchWithLang('http://localhost:3000/generate-qrcode', {
+      const response = await fetchWithLang('https://api.mypostech.store/generate-qrcode', {
         method: 'GET',
         credentials: 'include',
       });

@@ -17,7 +17,7 @@ export const globalStore = {
 
 export const fetchSuppliers = async () => {
     try {
-      const res = await fetchWithLang("http://localhost:3000/suppliers", {
+      const res = await fetchWithLang("https://api.mypostech.store/suppliers", {
         method: "GET",
         credentials: "include",
       });
@@ -38,7 +38,7 @@ export const fetchSuppliers = async () => {
 
 export const fetchCategories = async () => {
     try {
-      const res = await fetchWithLang("http://localhost:3000/categories", {
+      const res = await fetchWithLang("https://api.mypostech.store/categories", {
         method: "GET",
         credentials: "include",
       });

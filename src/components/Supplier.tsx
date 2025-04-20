@@ -60,7 +60,7 @@ export const SupplierComponent = component$((props: {lang: string}) => {
     try {
       // Send category only if it's not empty
       if (formState.category.trim()) {
-        const categoryResponse = await fetchWithLang("http://localhost:3000/categories", {
+        const categoryResponse = await fetchWithLang("https://api.mypostech.store/categories", {
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
@@ -71,7 +71,7 @@ export const SupplierComponent = component$((props: {lang: string}) => {
       }
 
       // Send supplier data
-      const supplierResponse = await fetchWithLang("http://localhost:3000/suppliers", {
+      const supplierResponse = await fetchWithLang("https://api.mypostech.store/suppliers", {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

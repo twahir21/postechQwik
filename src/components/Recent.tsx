@@ -12,7 +12,7 @@ export const RecentProductsTable = component$((props: { lang: string }) => {
   useVisibleTask$(async ({ track }) => {
     track(() => productRefetch.value);
     try {
-      const response = await fetchWithLang("http://localhost:3000/analytics", {
+      const response = await fetchWithLang("https://api.mypostech.store/analytics", {
         method: "GET",
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

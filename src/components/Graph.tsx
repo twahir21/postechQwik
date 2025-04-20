@@ -10,7 +10,7 @@ type NetSalesData = {
 
 export const Graph = component$((props: {lang: string, data: NetSalesData[] }) => {
   useVisibleTask$(async () => {
-    await fetchWithLang("http://localhost:3000/analytics", {
+    await fetchWithLang("https://api.mypostech.store/analytics", {
       credentials: 'include'
     });
   });

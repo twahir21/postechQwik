@@ -156,7 +156,7 @@ export const ProductComponent = component$((props: {lang: string}) => {
     
       // Send data to backend
 
-      const response = await fetchWithLang('http://localhost:3000/products', {
+      const response = await fetchWithLang('https://api.mypostech.store/products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(productPayload),

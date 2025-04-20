@@ -73,7 +73,7 @@ export const AuthForm = component$<AuthFormProps>(({ isLogin }) => {
 
   const handleSubmit = $(async () => {
     if (Object.values(state.valid).every((valid) => valid)) {
-      const endpoint = state.isLogin ? 'http://localhost:3000/login' : 'http://localhost:3000/register';
+      const endpoint = state.isLogin ? 'https://api.mypostech.store/login' : 'https://api.mypostech.store/register';
 
       try {
         const payload = {

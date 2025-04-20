@@ -30,7 +30,7 @@ export const SettingsComponent = component$(() => {
   });
 
   useResource$(async () => {
-    const response = await fetchWithLang("http://localhost:3000/shop", {
+    const response = await fetchWithLang("https://api.mypostech.store/shop", {
       credentials: 'include'
     });
 
@@ -57,7 +57,7 @@ export const SettingsComponent = component$(() => {
     }
 
 
-    const req = await fetchWithLang("http://localhost:3000/shop", {
+    const req = await fetchWithLang("https://api.mypostech.store/shop", {
       credentials: 'include',
       method: "PUT",
       headers: {

@@ -28,7 +28,7 @@ export const HomeComponent = component$((props: { lang: string }) => {
   const netSalesStore = useStore<{ day: string; netSales: number }[]>([]);
 
   useVisibleTask$(async() => {
-    const res = await fetchWithLang("http://localhost:3000/analytics", {
+    const res = await fetchWithLang("https://api.mypostech.store/analytics", {
       credentials: 'include'
     });
 

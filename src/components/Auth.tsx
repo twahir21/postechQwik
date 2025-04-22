@@ -99,8 +99,7 @@ export const AuthForm = component$<AuthFormProps>(({ isLogin }) => {
           // 🔄 Conditional redirect logic
           if (state.isLogin) {
             localStorage.setItem("username", state.username || "Guest");
-            // Set token cookie manually
-            // document.cookie = `auth_token=${result.token}; path=/; max-age=604800`; // 7 days
+            // Set token cookie manually is not allowed for production in frontend
             window.location.href = "https://qwik.mypostech.store"; // Redirect to home
           } else {
             // After registration, redirect to login

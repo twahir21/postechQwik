@@ -36,6 +36,7 @@ interface Store {
     message: string;
     isSuccess: boolean;
   };
+  isLoading?: boolean
 }
 
 export const ProductComponent = component$((props: {lang: string}) => {
@@ -57,6 +58,7 @@ export const ProductComponent = component$((props: {lang: string}) => {
       message: '' as string,
       isSuccess: false,
     },
+    isLoading: false
   });
 
  const { 
@@ -122,7 +124,9 @@ export const ProductComponent = component$((props: {lang: string}) => {
 
   // Handle form submission
   const handleSubmit = $(async () => {
+    if (store.isLoading) return; // prevent multiple reqs
     try {
+      store.isLoading = true; // Start loading ...
       // Ensure no fields are empty
       if (!store.product.name || !store.product.priceSold || !store.product.stock || 
           !store.product.minStock || !store.product.unit || !store.purchases.priceBought ||
@@ -177,6 +181,8 @@ export const ProductComponent = component$((props: {lang: string}) => {
     } catch (error) {
       console.error('Error submitting form:', error);
       store.modal = { isOpen: true, message: 'Tatizo limejitokeza', isSuccess: false };
+    } finally {
+      store.isLoading = false; // end loading ...
     }
   });
   
@@ -258,7 +264,14 @@ export const ProductComponent = component$((props: {lang: string}) => {
           class="bg-gray-700 text-white px-4 py-2 rounded mt-4 w-full hover:bg-gray-500"
           onClick$={handleSubmit}
         >
-          Submit
+          { 
+            store.isLoading ?
+            // Custom Loader
+            <div class="inline-flex">
+            <div class="loaderCustom"></div>
+            </div>
+           : 'Tuma'
+          }
         </button>
       </div>
         

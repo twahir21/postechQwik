@@ -2,7 +2,8 @@ import { $, component$, useStore } from '@builder.io/qwik';
 import { fetchWithLang } from '~/routes/function/fetchLang';
 
 interface AuthFormProps {
-  isLogin: boolean;
+  isLogin?: boolean;
+  isLoading?: boolean;
 }
 
 export const AuthForm = component$<AuthFormProps>(({ isLogin }) => {
@@ -20,7 +21,8 @@ export const AuthForm = component$<AuthFormProps>(({ isLogin }) => {
       isOpen: false,
       message: '' as string,
       isSuccess: false,
-    }
+    },
+    isLoading: false
   });
 
   // Real-time validation
@@ -72,9 +74,10 @@ export const AuthForm = component$<AuthFormProps>(({ isLogin }) => {
 
 
   const handleSubmit = $(async () => {
+    if (state.isLoading) return; // prevent multiple reqs
     if (Object.values(state.valid).every((valid) => valid)) {
       const endpoint = state.isLogin ? 'https://api.mypostech.store/login' : 'https://api.mypostech.store/register';
-
+      state.isLoading = true; // Start loading ...
       try {
         const payload = {
           ...(state.isLogin ? {} : { name: state.name, phoneNumber: state.phoneNumber }),
@@ -122,6 +125,8 @@ export const AuthForm = component$<AuthFormProps>(({ isLogin }) => {
       } catch (error) {
         console.error('Network error:', error);
         state.modal = { isOpen: true, message: 'Tatizo la mtandao. Tafadhali jaribu tena', isSuccess: false };
+      } finally {
+        state.isLoading = false; // end loading ...
       }
     }
   });
@@ -210,8 +215,15 @@ export const AuthForm = component$<AuthFormProps>(({ isLogin }) => {
         {/* {state.isLogin && <a href="#" class="text-gray-900 text-sm block text-right mb-2">Umesahau nenosiri?</a>} */}
 
         {/* Submit Button */}
-        <button class={`w-full p-2 rounded mt-2 ${state.isLogin ? 'bg-gray-900 text-white' : 'bg-gray-600 text-white'}`} onClick$={handleSubmit}>
-          {state.isLogin ? 'Ingia' : 'Jisajili'}
+        <button class={`w-full p-2 rounded mt-2 ${state.isLogin ? 'bg-gray-900 text-white' : 'bg-gray-600 text-white'}`} onClick$={handleSubmit} disabled={state.isLoading}>
+          {state.isLoading ?           
+          
+          // Custom Loader
+          <div class="inline-flex">
+            <div class="loaderCustom"></div>
+          </div>
+          
+          : state.isLogin ? 'Ingia' : 'Jisajili'}
         </button>
 
         {/* Toggle Between Login/Register */}

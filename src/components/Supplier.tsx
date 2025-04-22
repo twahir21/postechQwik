@@ -20,7 +20,8 @@ export const SupplierComponent = component$((props: {lang: string}) => {
       isOpen: false,
       message: "" as string,
       isSuccess: false,
-    }
+    },
+    isLoading: false as boolean
   });
   const { supplierRefetch, categoryRefetch }  = useContext(RefetchContext);
 
@@ -57,7 +58,10 @@ export const SupplierComponent = component$((props: {lang: string}) => {
       return;
     }
 
+    if (formState.isLoading) return; // prevent multiple reqs
+
     try {
+      formState.isLoading = true; // Start loading ...
       // Send category only if it's not empty
       if (formState.category.trim()) {
         const categoryResponse = await fetchWithLang("https://api.mypostech.store/categories", {
@@ -99,6 +103,8 @@ export const SupplierComponent = component$((props: {lang: string}) => {
     } catch (error) {
       console.error("Form submission failed:", error);
       formState.modal = { isOpen: true, message: "Tatizo la mtandao. Tafadhali jaribu tena", isSuccess: false };
+    } finally {
+      formState.isLoading = false; // end loading ...
     }
   });
 
@@ -147,10 +153,17 @@ export const SupplierComponent = component$((props: {lang: string}) => {
         <button
           type="button"
           onClick$={(e) => handleSubmit(e)}
-          disabled={!formState.valid.name || !formState.valid.contact}
+          disabled={!formState.valid.name || !formState.valid.contact || formState.isLoading}
           class="bg-gray-700 text-white px-4 py-2 rounded mt-4 w-full hover:bg-gray-500"
         >
-          Tuma
+          { 
+            formState.isLoading ?
+            // Custom Loader
+            <div class="inline-flex">
+            <div class="loaderCustom"></div>
+            </div>
+           : 'Tuma'
+          }
         </button>
       </form>
 

@@ -2,13 +2,13 @@ import { component$, useVisibleTask$ } from "@builder.io/qwik";
 import Chart from "chart.js/auto";
 import { fetchWithLang } from "~/routes/function/fetchLang";
 
-type NetSalesData = {
+type SalesData = {
   day: string;
   netSales: number;
 };
 
 
-export const Graph = component$((props: {lang: string, data: NetSalesData[] }) => {
+export const Graph = component$((props: {lang: string, data: SalesData[] }) => {
   useVisibleTask$(async () => {
     await fetchWithLang("https://api.mypostech.store/analytics", {
       credentials: 'include'
@@ -17,13 +17,20 @@ export const Graph = component$((props: {lang: string, data: NetSalesData[] }) =
 
   useVisibleTask$(() => {
     const canvas = document.getElementById("salesChart") as HTMLCanvasElement | null;
-    if (!canvas) return;
+    if (!canvas){ 
+      console.warn("⚠️ Canvas not found");
+      return;
+    }
 
     const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    if (!ctx) {
+      console.warn("⚠️ Canvas context not found");
+      return;
+    }
 
     // Cleanup old chart if reloaded
     if ((canvas as any)._chartInstance) {
+      console.log("♻️ Destroying old chart instance");
       (canvas as any)._chartInstance.destroy();
     }
 
@@ -34,6 +41,8 @@ export const Graph = component$((props: {lang: string, data: NetSalesData[] }) =
 
     const labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
     const data = labels.map((day) => salesMap.get(day) || 0);
+    console.log("✅ Final Chart Data:", data);
+
 
     const chart = new Chart(ctx, {
       type: "bar",

@@ -156,7 +156,7 @@ export default component$(() => {
   const navigateLogout = useNavigate();
 
   const logout = $(() => {
-    // Delete the authentication cookie
+    // Delete the authentication cookie do not do with plain JavaScript frontend
     document.cookie = "auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/";
 
     // Optionally clear any localStorage items related to the user
@@ -292,7 +292,7 @@ export default component$(() => {
                 </div>
               )}
             </div>
-            <button title="Logout" onClick$={logout}> ⏻ </button>
+            <button title="Logout" onClick$={logout}> 👋 </button>
 
             {/* <button title="profile"> 👤 </button> */}
           </div>

@@ -215,7 +215,7 @@ export const AuthForm = component$<AuthFormProps>(({ isLogin }) => {
         {/* {state.isLogin && <a href="#" class="text-gray-900 text-sm block text-right mb-2">Umesahau nenosiri?</a>} */}
 
         {/* Submit Button */}
-        <button class={`w-full p-2 rounded mt-2 ${state.isLogin ? 'bg-gray-900 text-white' : 'bg-gray-600 text-white'}`} onClick$={handleSubmit} disabled={state.isLoading}>
+        <button class={`w-full p-2 rounded mt-2 ${state.isLoading ? 'bg-gray-400' : state.isLogin ? 'bg-gray-900 text-white' : 'bg-gray-600 text-white'}`} onClick$={handleSubmit} disabled={state.isLoading}>
           {state.isLoading ?           
           
           // Custom Loader

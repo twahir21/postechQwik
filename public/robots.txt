@@ -1,5 +1,9 @@
-# Allow all robots access to everything, except:
 User-agent: *
+Allow: /
+
+# Disallow sensitive or irrelevant directories
+Disallow: /admin/
+Disallow: /temp/
 Disallow: /admin/
 Disallow: /login/
 Disallow: /scan-qrcode/
@@ -7,10 +11,6 @@ Disallow: /checkout/
 Disallow: /cart/
 Disallow: /profile/
 
-# Allow all robots to access the main POS shop page (for public visibility)
-Allow: /shop/
-Allow: /products/
-Allow: /category/
-Allow: /analytics/
 
-Sitemap: https://www.mypostech.store/sitemap.xml
+# Sitemap location
+Sitemap: https://mypostech.store/sitemap.xml

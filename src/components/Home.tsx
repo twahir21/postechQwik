@@ -1,4 +1,4 @@
-import { component$, useStore, useVisibleTask$ } from "@builder.io/qwik";
+import { component$, useSignal, useStore, useVisibleTask$ } from "@builder.io/qwik";
 import { Translate } from "./Language";  // Make sure this is the correct path
 import { RecentProductsTable } from "./Recent";
 import { Graph } from "./Graph";
@@ -26,6 +26,8 @@ export const HomeComponent = component$((props: { lang: string }) => {
     lowestPrdStock: 0 as number
   });
   const netSalesStore = useStore<{ day: string; netSales: number }[]>([]);
+  const isGraphReady = useSignal(false);
+
 
   useVisibleTask$(async() => {
     const res = await fetchWithLang("https://api.mypostech.store/analytics", {
@@ -109,6 +111,7 @@ export const HomeComponent = component$((props: { lang: string }) => {
 
     netSalesStore.push(...netSales);
 
+    isGraphReady.value = true; // ✅ trigger Graph display only after data is ready
 
 
   });
@@ -235,7 +238,7 @@ export const HomeComponent = component$((props: { lang: string }) => {
 
 
       </div>
-      <Graph lang={props.lang} data={netSalesStore}/>
+      {isGraphReady.value && <Graph lang={props.lang} data={netSalesStore} />}
       <RecentProductsTable lang={props.lang}/>
     </>
   );

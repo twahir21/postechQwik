@@ -17,6 +17,9 @@ export const SettingsComponent = component$(() => {
     confirmPassword?: string;
     isTrial?: boolean;
     trialEnds?: string; // You could use `Date` if you want stricter typing
+    isLoading?: boolean;
+    isDelete?: boolean;
+    isPassword?: boolean;
   }
 
   const store = useStore<Store>({
@@ -27,48 +30,130 @@ export const SettingsComponent = component$(() => {
     confirmPassword: '',
     isTrial: true,
     trialEnds: '2025-04-30', // Consider using a Date object if needed
+    isLoading: false,
+    isDelete: false,
+    isPassword: false
   });
 
+  // logic for handling shop details
   useResource$(async () => {
-    const response = await fetchWithLang("https://api.mypostech.store/shop", {
-      credentials: 'include'
-    });
-
-    if (!response.ok) {
-      console.error("Imeshindwa kupokea ujumbe unaotakiwa");
+    if (store.isLoading) return; // prevent multiple reqs
+    try {
+      store.isLoading = true; // Start loading ...
+      const response = await fetchWithLang("https://api.mypostech.store/shop", {
+        credentials: 'include'
+      });
+  
+      if (!response.ok) {
+        console.error("Imeshindwa kupokea ujumbe unaotakiwa");
+      }
+  
+      const data = await response.json();
+  
+      if (!data.success) {
+        console.log(data.message || "Kuna tatizo");
+      }
+  
+      store.email = data.email.email;
+      store.shopName = data.shopName.shopName;
+    } catch (error) {
+      error instanceof Error ? error : "Imeshindwa kuwasiliana na seva"
+    } finally{
+      store.isLoading = false; // finishes loading ...
     }
-
-    const data = await response.json();
-
-    if (!data.success) {
-      console.log(data.message || "Kuna tatizo");
-    }
-
-    store.email = data.email.email;
-    store.shopName = data.shopName.shopName;
 
   });
 
   const handleSubmit = $(async () => {
-
-    const payload = {
-      email: store.email,
-      shopName: store.shopName
+    if (store.isLoading) return;
+    store.isLoading = true;
+    try {
+      const payload = {
+        email: store.email,
+        shopName: store.shopName
+      };
+  
+      const req = await fetchWithLang("https://api.mypostech.store/shop", {
+        credentials: 'include',
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+  
+      if (!req.ok) {
+        console.error("Imeshindwa kutuma ombi lako kwa seva");
+      }
+    } finally {
+      store.isLoading = false;
     }
-
-
-    const req = await fetchWithLang("https://api.mypostech.store/shop", {
-      credentials: 'include',
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(payload)
-    });
-
-    if (!req.ok) {
-      console.error("Imeshindwa kutuma ombi lako kwa seva");    }
   });
+
+    // logic for password change
+    const handlePswdSubmit = $(async () => {
+      if (store.isPassword) return;
+      // validate inputs
+      if (
+        currentPassword.value.length < 6 ||
+        newPassword.value.length < 6 ||
+        confirmPassword.value !== newPassword.value
+      ) {
+        return;
+      }
+  
+      store.isPassword = true;
+      try {
+        const payload = {
+          currentPassword: currentPassword.value,
+          newPassword: newPassword.value
+        };
+    
+        const req = await fetchWithLang("https://api.mypostech.store/update-password", {
+          credentials: 'include',
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+    
+        if (!req.ok) {
+          console.error("Imeshindwa kutuma ombi lako kwa seva");
+        }
+  
+        const res = await req.json();
+  
+        console.log(res.message);
+  
+      } finally {
+        store.isPassword = false;
+      }
+    });
+  
+    // logic to delete the shop
+    const handleDelSubmit = $(async () => {
+      if (store.isDelete) return;
+  
+      store.isDelete = true;
+      try {
+        const req = await fetchWithLang("https://api.mypostech.store/delete-shop", {
+          credentials: 'include',
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json"
+          },
+        });
+    
+        if (!req.ok) {
+          console.error("Imeshindwa kutuma ombi lako kwa seva");
+        }
+  
+      } finally {
+        store.isDelete = false;
+      }
+    });
+  
 
   return (
     <div class="p-4 max-w-3xl mx-auto">
@@ -92,9 +177,18 @@ export const SettingsComponent = component$(() => {
             value={store.email}
             onInput$={(e) => (store.email = (e.target as HTMLInputElement).value)}
           />
-          <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          onClick$={handleSubmit}>
-            💾 Save Changes
+          <button class={`${store.isLoading ? 'bg-gray-400': 'bg-blue-600'} hover:bg-blue-700 text-white px-4 py-2 rounded `}
+          onClick$={handleSubmit}
+          disabled={store.isLoading}
+          >
+            {
+            store.isLoading ?             
+              // Custom Loader
+              <div class="inline-flex">
+              <div class="loaderCustom"></div>
+              </div>
+            : '💾 Save Changes'
+            }
           </button>
         </div>
       </section>
@@ -109,20 +203,58 @@ export const SettingsComponent = component$(() => {
             placeholder="Current Password"
             bind:value={currentPassword}
           />
+            {/* Message for current password */}
+            {currentPassword.value.length > 0 && (
+              <p class={`text-sm ${currentPassword.value.length >= 6 ? 'text-green-600' : 'text-red-600'}`}>
+                {currentPassword.value.length >= 6 ? '✅ Sahihi' : '❌ Nenosiri fupi mno (min 6)'}
+              </p>
+            )}
           <input
             type="password"
             class="w-full p-2 border rounded"
             placeholder="New Password"
             bind:value={newPassword}
           />
+            {/* Message for new password */}
+            {newPassword.value.length > 0 && (
+              <p class={`text-sm ${newPassword.value.length >= 6 ? 'text-green-600' : 'text-red-600'}`}>
+                {newPassword.value.length >= 6 ? '✅ Sahihi' : '❌ Nenosiri fupi mno (min 6)'}
+              </p>
+            )}
           <input
             type="password"
             class="w-full p-2 border rounded"
             placeholder="Confirm New Password"
             bind:value={confirmPassword}
           />
-          <button class="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700">
-            🔒 Update Password
+            {/* Message for confirm password */}
+            {confirmPassword.value.length > 0 && (
+              <p class={`text-sm ${
+                confirmPassword.value === newPassword.value && confirmPassword.value.length >= 6
+                  ? 'text-green-600'
+                  : 'text-red-600'
+              }`}>
+                {
+                  confirmPassword.value === newPassword.value && confirmPassword.value.length >= 6
+                    ? '✅ Sahihi'
+                    : '❌ Nenosiri hazifanani'
+                }
+              </p>
+            )}
+          <button 
+          class={`${store.isPassword ? 'bg-yellow-300': 'bg-yellow-600'} text-white px-4 py-2 rounded hover:bg-yellow-700`}
+          disabled={store.isPassword}
+          onClick$={handlePswdSubmit}
+          >
+           
+            {
+            store.isPassword ?             
+              // Custom Loader
+              <div class="inline-flex">
+              <div class="loaderCustom"></div>
+              </div>
+            : '🔒 Update Password'
+            }
           </button>
         </div>
       </section>
@@ -149,8 +281,18 @@ export const SettingsComponent = component$(() => {
       <section class="bg-red-100 border border-red-400 rounded-xl p-4">
         <h2 class="text-lg font-semibold text-red-700 mb-2">⚠️ Danger Zone</h2>
         <p class="text-sm text-red-700 mb-3">Deleting your shop is permanent and cannot be undone.</p>
-        <button class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
-          🗑️ Delete Shop
+        <button class={`${store.isDelete ? 'bg-red-400': 'bg-red-600'} text-white px-4 py-2 rounded hover:bg-red-700`}
+        disabled={store.isDelete}
+        onClick$={handleDelSubmit}
+        >
+          {
+            store.isDelete ?             
+              // Custom Loader
+              <div class="inline-flex">
+              <div class="loaderCustom"></div>
+              </div>
+            : '🗑️ Futa Duka'
+            }
         </button>
       </section>
     </div>

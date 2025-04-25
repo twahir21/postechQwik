@@ -165,27 +165,32 @@ export const CustomersCrudComponent =  component$((props: {lang: string }) => {
 
       {/* Mobile Cards */}
       <div class="sm:hidden space-y-4">
-        {customer.value.map((customer) => (
-          <div key={customer.id} class="border rounded-lg p-3 bg-white shadow-sm">
-            <div class="font-semibold">{customer.name}</div>
-            <div class="text-sm"> {customer.contact}</div>
-            <td class="p-3 space-x-2">
+        {isLoading.value ? (
+          <div class="text-center text-gray-500 p-4">Loading...</div>
+        ) : customer.value.length === 0 ? (
+          <div class="text-center text-gray-500 p-4">Hakuna mteja yeyote, msajili kwanza ...</div>
+        ) : (
+          customer.value.map((customer) => (
+            <div key={customer.id} class="border rounded-lg p-3 bg-white shadow-sm">
+              <div class="font-semibold">{customer.name}</div>
+              <div class="text-sm">{customer.contact}</div>
+              <div class="mt-2 space-x-4">
                 <button class="text-blue-600 hover:underline" onClick$={() => editCustomer(customer)}>
-                    Edit
+                  Edit
                 </button>
                 <button
-                    class="text-red-600 hover:underline"
-                    onClick$={() => {
+                  class="text-red-600 hover:underline"
+                  onClick$={() => {
                     selectedCustomer.value = customer;
                     isDeleting.value = true;
-                    }}
+                  }}
                 >
-                    Delete
+                  Delete
                 </button>
-                </td>
-
-          </div>
-        ))}
+              </div>
+            </div>
+          ))
+        )}
       </div>
       {/* Pagination */}
       <div class="mt-6 flex justify-between items-center">

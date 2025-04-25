@@ -163,27 +163,32 @@ export const SuppCrudComponent =  component$((props: {lang: string }) => {
 
       {/* Mobile Cards */}
       <div class="sm:hidden space-y-4">
-        {supplier.value.map((supplier) => (
-          <div key={supplier.id} class="border rounded-lg p-3 bg-white shadow-sm">
-            <div class="font-semibold">{supplier.company}</div>
-            <div class="text-sm"> {supplier.contact}</div>
-            <td class="p-3 space-x-2">
+        {isLoading.value ? (
+          <div class="text-center text-gray-500 p-4">Loading...</div>
+        ) : supplier.value.length === 0 ? (
+          <div class="text-center text-gray-500 p-4">Hakuna muuzaji yeyote, msajili kwanza ...</div>
+        ) : (
+          supplier.value.map((supplier) => (
+            <div key={supplier.id} class="border rounded-lg p-3 bg-white shadow-sm">
+              <div class="font-semibold">{supplier.company}</div>
+              <div class="text-sm">{supplier.contact}</div>
+              <div class="mt-2 space-x-4">
                 <button class="text-blue-600 hover:underline" onClick$={() => editSupplier(supplier)}>
-                    Edit
+                  Edit
                 </button>
                 <button
-                    class="text-red-600 hover:underline"
-                    onClick$={() => {
+                  class="text-red-600 hover:underline"
+                  onClick$={() => {
                     selectedSupplier.value = supplier;
                     isDeleting.value = true;
-                    }}
+                  }}
                 >
-                    Delete
+                  Delete
                 </button>
-                </td>
-
-          </div>
-        ))}
+              </div>
+            </div>
+          ))
+        )}
       </div>
       {/* Pagination */}
       <div class="mt-6 flex justify-between items-center">

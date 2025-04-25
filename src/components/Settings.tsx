@@ -17,9 +17,9 @@ export const SettingsComponent = component$(() => {
     confirmPassword?: string;
     isTrial?: boolean;
     trialEnds?: string; // You could use `Date` if you want stricter typing
-    isLoading?: boolean;
-    isDelete?: boolean;
-    isPassword?: boolean;
+    isLoading?:boolean;
+    isPassword?:boolean;
+    isDelete?:boolean;
   }
 
   const store = useStore<Store>({
@@ -31,11 +31,16 @@ export const SettingsComponent = component$(() => {
     isTrial: true,
     trialEnds: '2025-04-30', // Consider using a Date object if needed
     isLoading: false,
-    isDelete: false,
-    isPassword: false
+    isPassword: false,
+    isDelete: false
   });
 
-  // logic for handling shop details
+  const showModal = useSignal(false);
+  const confirmInput = useSignal('');
+
+
+
+  // logic for shopName and email
   useResource$(async () => {
     if (store.isLoading) return; // prevent multiple reqs
     try {
@@ -90,54 +95,57 @@ export const SettingsComponent = component$(() => {
     }
   });
 
-    // logic for password change
-    const handlePswdSubmit = $(async () => {
-      if (store.isPassword) return;
-      // validate inputs
-      if (
-        currentPassword.value.length < 6 ||
-        newPassword.value.length < 6 ||
-        confirmPassword.value !== newPassword.value
-      ) {
-        return;
+
+  // logic for password change
+  const handlePswdSubmit = $(async () => {
+    if (store.isPassword) return;
+    // validate inputs
+    if (
+      currentPassword.value.length < 6 ||
+      newPassword.value.length < 6 ||
+      confirmPassword.value !== newPassword.value
+    ) {
+      return;
+    }
+
+    store.isPassword = true;
+    try {
+      const payload = {
+        currentPassword: currentPassword.value,
+        newPassword: newPassword.value
+      };
+  
+      const req = await fetchWithLang("https://api.mypostech.store/update-password", {
+        credentials: 'include',
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+  
+      if (!req.ok) {
+        console.error("Imeshindwa kutuma ombi lako kwa seva");
       }
-  
-      store.isPassword = true;
-      try {
-        const payload = {
-          currentPassword: currentPassword.value,
-          newPassword: newPassword.value
-        };
-    
-        const req = await fetchWithLang("https://api.mypostech.store/update-password", {
-          credentials: 'include',
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(payload)
-        });
-    
-        if (!req.ok) {
-          console.error("Imeshindwa kutuma ombi lako kwa seva");
-        }
-  
-        const res = await req.json();
-  
-        console.log(res.message);
-  
-      } finally {
-        store.isPassword = false;
-      }
-    });
-  
-    // logic to delete the shop
-    const handleDelSubmit = $(async () => {
+
+      const res = await req.json();
+
+      console.log(res.message);
+
+    } finally {
+      store.isPassword = false;
+    }
+  });
+
+  // logic to delete the shop
+  const handleConfirmDelete = $(async () => {
+    if (confirmInput.value.trim().toLowerCase() === "nipo tayari kufuta duka") {
+      // original delete logic
       if (store.isDelete) return;
-  
+
       store.isDelete = true;
       try {
-        const req = await fetchWithLang("https://api.mypostech.store/delete-shop", {
+        const req = await fetchWithLang("https://api.mypostech.store/delete-shop/ens", {
           credentials: 'include',
           method: "DELETE",
           headers: {
@@ -149,10 +157,20 @@ export const SettingsComponent = component$(() => {
           console.error("Imeshindwa kutuma ombi lako kwa seva");
         }
   
+        // const res = await req.json();
+  
+        // console.log(res.message);
+  
       } finally {
         store.isDelete = false;
       }
-    });
+      showModal.value = false;
+      return true;
+    } else {
+      alert("Andika sahihi: 'nipo tayari kufuta duka'");
+      return false;
+    }
+  });
   
 
   return (
@@ -259,6 +277,7 @@ export const SettingsComponent = component$(() => {
         </div>
       </section>
 
+
       {/* Subscription Info */}
       <section class="mb-6 bg-white shadow rounded-xl p-4">
         <h2 class="text-lg font-semibold mb-2">💳 Subscription</h2>
@@ -283,7 +302,7 @@ export const SettingsComponent = component$(() => {
         <p class="text-sm text-red-700 mb-3">Deleting your shop is permanent and cannot be undone.</p>
         <button class={`${store.isDelete ? 'bg-red-400': 'bg-red-600'} text-white px-4 py-2 rounded hover:bg-red-700`}
         disabled={store.isDelete}
-        onClick$={handleDelSubmit}
+        onClick$={() => showModal.value = true}
         >
           {
             store.isDelete ?             
@@ -295,6 +314,62 @@ export const SettingsComponent = component$(() => {
             }
         </button>
       </section>
+      
+      {/* Modal for deletion confirmation */}
+      {showModal.value && (
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-gray-400 bg-opacity-60 backdrop-blur-[1px]">
+          <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-md">
+            <h3 class="text-lg font-bold mb-4 text-red-600">⚠️ Thibitisha Kufuta Duka</h3>
+            <p class="mb-3 text-sm">
+              Andika: <strong class="text-red-700">nipo tayari kufuta duka</strong> kuthibitisha.
+            </p>
+
+            <input
+              type="text"
+              class="w-full border rounded p-2 mb-1"
+              placeholder="Andika hapa..."
+              bind:value={confirmInput}
+            />
+
+            {/* Validation message */}
+            {confirmInput.value.length > 0 && (
+              <p class={`text-sm ${confirmInput.value === 'nipo tayari kufuta duka' ? 'text-green-600' : 'text-red-600'}`}>
+                {
+                  confirmInput.value === 'nipo tayari kufuta duka'
+                    ? '✅ Umeandika sahihi'
+                    : '❌ Andika sentensi kamili ili kuthibitisha'
+                }
+              </p>
+            )}
+
+            <div class="flex justify-end gap-2 mt-4">
+              <button 
+                class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400 text-black"
+                onClick$={() => {
+                  confirmInput.value = '';
+                  showModal.value = false;
+                }}
+              >
+                Ghairi
+              </button>
+
+              <button 
+                class={`px-4 py-2 rounded text-white ${
+                  confirmInput.value === 'nipo tayari kufuta duka'
+                    ? 'bg-red-600 hover:bg-red-700'
+                    : 'bg-red-300 cursor-not-allowed'
+                }`}
+                disabled={confirmInput.value !== 'nipo tayari kufuta duka'}
+                onClick$={handleConfirmDelete}
+              >
+                Thibitisha
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
     </div>
   );
 });

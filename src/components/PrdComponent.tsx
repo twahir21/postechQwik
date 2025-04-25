@@ -185,42 +185,48 @@ export const CrudPrdComponent =  component$((props: {lang: string}) => {
 
       {/* Mobile Cards */}
       <div class="sm:hidden space-y-4">
-        {products.value.map((product) => (
-          <div key={product.id} class="border rounded-lg p-3 bg-white shadow-sm">
-            <div class="font-semibold">{product.name}</div>
-            <div class="text-sm">Price Sold: Tsh {product.priceSold}</div>
-            <div class="text-sm">Price Bought: Tsh {product.priceBought}</div>
-            <div class="text-sm">Stock: {product.stock}</div>
-            <div class="text-sm">Unit: {product.unit}</div>
-            <div class="text-sm mt-1">
-              <span
-                class={`inline-block px-2 py-1 text-xs rounded-full ${
-                  product.status === 'available'
-                    ? 'bg-green-200 text-green-800'
-                    : 'bg-red-200 text-red-800'
-                }`}
-              >
-                {product.status}
-              </span>
-            </div>
-            <td class="p-3 space-x-2">
+      {isLoading.value ? (
+          <div class="text-center text-gray-500 p-4">Loading...</div>
+        ) : products.value.length === 0 ? (
+          <div class="text-center text-gray-500 p-4">Hakuna bidhaa yoyote, isajili kwanza ....</div>
+        ) : (
+          products.value.map((product) => (
+            <div key={product.id} class="border rounded-lg p-3 bg-white shadow-sm">
+              <div class="font-semibold">{product.name}</div>
+              <div class="text-sm">Price Sold: Tsh {product.priceSold}</div>
+              <div class="text-sm">Price Bought: Tsh {product.priceBought}</div>
+              <div class="text-sm">Stock: {product.stock}</div>
+              <div class="text-sm">Unit: {product.unit}</div>
+              <div class="text-sm mt-1">
+                <span
+                  class={`inline-block px-2 py-1 text-xs rounded-full ${
+                    product.status === 'available'
+                      ? 'bg-green-200 text-green-800'
+                      : 'bg-red-200 text-red-800'
+                  }`}
+                >
+                  {product.status}
+                </span>
+              </div>
+              <div class="mt-2 space-x-4">
                 <button class="text-blue-600 hover:underline" onClick$={() => editProduct(product)}>
-                    Edit
+                  Edit
                 </button>
                 <button
-                    class="text-red-600 hover:underline"
-                    onClick$={() => {
+                  class="text-red-600 hover:underline"
+                  onClick$={() => {
                     selectedProduct.value = product;
                     isDeleting.value = true;
-                    }}
+                  }}
                 >
-                    Delete
+                  Delete
                 </button>
-                </td>
-
-          </div>
-        ))}
+              </div>
+            </div>
+          ))
+        )}
       </div>
+
       {/* Pagination */}
       <div class="mt-6 flex justify-between items-center">
         <button

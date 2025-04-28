@@ -71,7 +71,7 @@ export const Salexp = component$(() => {
             callbacks: {
               label: (context) => {
                 const label = context.dataset.label || "";
-                const value = context.raw || 0;
+                const value = typeof context.raw === "number" ? context.raw : 0;
                 return `${label}: ${Math.abs(value)}`;
               },
             },

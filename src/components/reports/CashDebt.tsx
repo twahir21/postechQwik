@@ -25,7 +25,6 @@ export const CashDebt = component$(() => {
       (canvas as any)._chartInstance.destroy();
     }
 
-    const total = dummyData.reduce((sum, item) => sum + item.amount, 0);
     const labels = dummyData.map((item) => item.type);
     const data = dummyData.map((item) => item.amount);
 
@@ -62,7 +61,7 @@ export const CashDebt = component$(() => {
 
             chart.data.datasets.forEach((dataset, datasetIndex) => {
               chart.getDatasetMeta(datasetIndex).data.forEach((datapoint, index) => {
-                const { x, y } = datapoint.tooltipPosition();
+                const { x, y } = datapoint.tooltipPosition(true);
                 const value = dataset.data[index];
                 const percentage = ((value / total) * 100).toFixed(1);
 

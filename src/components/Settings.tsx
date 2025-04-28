@@ -145,7 +145,7 @@ export const SettingsComponent = component$(() => {
 
       store.isDelete = true;
       try {
-        const req = await fetchWithLang("https://api.mypostech.store/delete-shop/ens", {
+        const req = await fetchWithLang("https://api.mypostech.store/delete-shop", {
           credentials: 'include',
           method: "DELETE",
           headers: {

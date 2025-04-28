@@ -1,4 +1,5 @@
-import { component$ } from '@builder.io/qwik';
+import { component$, useResource$, useSignal } from '@builder.io/qwik';
+import { fetchWithLang } from '~/routes/function/fetchLang';
 
 export const ExpensesComponent = component$(() => {
   const dummyExpenses = [
@@ -25,24 +26,43 @@ export const ExpensesComponent = component$(() => {
     },
   ];
 
+  const totalExpenses = useSignal("0");
+
+  useResource$(async () => {
+    try {
+      const res = await fetchWithLang("https://api.mypostech.store/analytics", {
+        credentials: 'include'
+      });
+
+      if (!res.ok) {
+        console.error("Response from the server is not ok")
+      }
+
+      const data = await res.json();
+      
+  
+      const formatMoney = (amount: number | undefined) =>
+        typeof amount === 'number' ? new Intl.NumberFormat().format(amount) : '0';
+      totalExpenses.value = formatMoney(data?.netProfit?.totalExpenses);
+      
+      // then fetch total rows for expenses and purchases
+  
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(error);
+      }else{
+        console.error("Unknown error occured!")
+      }
+    }
+  })
+
   return (
     <div class="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
       {/* Summary */}
-      <div class="bg-white rounded-xl shadow p-4 md:p-6 text-gray-800">
+      <div class="bg-green-100 rounded-xl shadow p-4 md:p-6 text-gray-800">
         <h2 class="text-lg md:text-2xl font-bold mb-3">📉 Muhtasari wa Matumizi</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm md:text-base">
-          <div class="bg-rose-100 p-3 rounded-xl">💸 Jumla ya Matumizi: <strong>15,500 TZS</strong></div>
-          <div class="bg-yellow-100 p-3 rounded-xl">📅 Matumizi ya Hivi Karibuni: <strong>3</strong></div>
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div class="bg-white rounded-xl shadow p-4 md:p-6 text-gray-800">
-        <h2 class="text-lg font-bold mb-2">⚙️ Hatua za Haraka</h2>
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
-          <button class="bg-rose-500 text-white p-2 rounded-md">👁️ Angalia Gharama</button>
-          <button class="bg-blue-500 text-white p-2 rounded-md">📊 Tazama Ripoti</button>
-          <button class="bg-green-600 text-white p-2 rounded-md">🖨️ Chapisha</button>
+          <div class="bg-rose-100 p-3 rounded-xl">💸 Jumla ya Matumizi: <strong>{totalExpenses.value} TZS</strong></div>
         </div>
       </div>
 

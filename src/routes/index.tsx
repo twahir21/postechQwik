@@ -10,7 +10,6 @@ import { DebtComponent } from "~/components/Debts";
 import { ExpensesComponent } from "~/components/Expenses";
 import { SuppCrudComponent } from "~/components/Supp";
 import { SettingsComponent } from "~/components/Settings";
-import { ReceiptComponent } from "~/components/Receipts";
 import { MainGraph } from "~/components/reports/MainGraph";
 import { OthersComponent } from "~/components/Others";
 
@@ -21,7 +20,6 @@ const translations: Record<string, Record<string, string>> = {
     home: "Home",
     sales: "Sales",
     others: "Others",
-    receipts: "Receipts",
     debt: "Debt Management",
     expenses: "Expenses Overview",
     graph: "Graph Reports",
@@ -37,7 +35,6 @@ const translations: Record<string, Record<string, string>> = {
     home: "الصفحة الرئيسية",
     sales: "المبيعات",
     others: "أخرى",
-    receipts: "الإيصالات",
     debt: "إدارة الديون",
     expenses: "نظرة عامة على المصاريف",
     graph: "تقارير الرسوم البيانية",
@@ -54,7 +51,6 @@ const translations: Record<string, Record<string, string>> = {
     home: "Nyumbani",
     sales: "Mauzo",
     others: "Mengineyo",
-    receipts: "Risiti",
     debt: "Usimamizi wa Madeni",
     expenses: "Muhtasari wa Gharama",
     graph: "Ripoti za Picha",
@@ -71,7 +67,6 @@ const translations: Record<string, Record<string, string>> = {
     home: "Accueil",
     sales: "Ventes",
     others: "Autres",
-    receipts: "Reçus",
     debt: "Gestion de la Dette",
     expenses: "Aperçu des Dépenses",
     graph: "Graphiques",
@@ -205,7 +200,6 @@ export default component$(() => {
             { name: "start", emoji: "🚀" },
             { name: "sales", emoji: "💰" },
             { name: "others", emoji: "🧿" },
-            { name: "receipts", emoji: "🧾" },
             { name: "debt", emoji: "💳" },
             { name: "expenses", emoji: "💸" },
             { name: "graph", emoji: "📉" },
@@ -307,7 +301,6 @@ export default component$(() => {
           {store.currentPage === "start" &&  <ProductComponent lang={store.selectedLanguage} />}
           {store.currentPage === "sales" && <SalesComponent />}
           {store.currentPage === "others" && <OthersComponent />}
-          {store.currentPage === "receipts" && <ReceiptComponent />}
           {store.currentPage === "debt" && <DebtComponent />}
           {store.currentPage === "expenses" && <ExpensesComponent />}
           {store.currentPage === "graph" && <MainGraph />}

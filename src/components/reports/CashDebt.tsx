@@ -1,7 +1,6 @@
 // src/components/SalesPieChart.tsx
 import { component$, useVisibleTask$ } from "@builder.io/qwik";
 import Chart from "chart.js/auto";
-import ChartDataLabels from "chartjs-plugin-datalabels";
 
 type SalesTypeData = {
   type: 'Cash' | 'Debt';
@@ -51,20 +50,35 @@ export const CashDebt = component$(() => {
             display: true,
             position: 'bottom',
           },
-          datalabels: {
-            color: '#fff',
-            font: {
-              weight: 'bold',
-              size: 14,
-            },
-            formatter: (value: number) => {
-              const percentage = ((value / total) * 100).toFixed(1);
-              return `${percentage}%`;
-            },
-          },
         },
       },
-      plugins: [ChartDataLabels],
+      plugins: [
+        {
+          id: 'customDataLabels',
+          afterDraw: (chart) => {
+            const ctx = chart.ctx;
+            const { datasets } = chart.data;
+            const total = datasets[0].data.reduce((sum, value) => sum + value, 0);
+
+            chart.data.datasets.forEach((dataset, datasetIndex) => {
+              chart.getDatasetMeta(datasetIndex).data.forEach((datapoint, index) => {
+                const { x, y } = datapoint.tooltipPosition();
+                const value = dataset.data[index];
+                const percentage = ((value / total) * 100).toFixed(1);
+
+                // Draw text
+                ctx.save();
+                ctx.font = 'bold 14px Arial';
+                ctx.fillStyle = '#fff';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(`${percentage}%`, x, y);
+                ctx.restore();
+              });
+            });
+          },
+        },
+      ],
     });
 
     (canvas as any)._chartInstance = chart;

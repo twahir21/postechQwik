@@ -1,11 +1,33 @@
-import { component$, useSignal } from "@builder.io/qwik";
+import { component$, useResource$, useSignal } from "@builder.io/qwik";
 import { DebtComponentGraph } from "./Debt";
 import { CashDebt } from "./CashDebt";
 import { Salexp } from "./Salexp";
 import { StockComponent } from "./Stock";
+import { fetchWithLang } from "~/routes/function/fetchLang";
 
 export const MainGraph =  component$(() => {
   const selected = useSignal<'debts' | 'cash' | 'expenses' | 'stock' | null>(null);
+  useResource$(async () => {
+    try {
+      const res = await fetchWithLang("https://api.mypostech.store/graph", {
+        credentials: 'include'
+      });
+  
+      if (!res.ok) {
+        console.error("Invalid response from server");
+      }
+  
+      const data = await res.json();
+
+      console.log(data)
+    } catch (error) {
+      if (error instanceof Error ){
+        console.error(error.message);
+      }else{
+        console.log("Unknown error occured")
+      }
+    }
+  });
 
   return (
     <div class="p-4 space-y-4">

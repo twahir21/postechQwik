@@ -1,5 +1,6 @@
 import { $, component$, useStore } from '@builder.io/qwik';
 import { fetchWithLang } from '~/routes/function/fetchLang';
+import svgGoogle from "../../public/google.svg"
 
 interface AuthFormProps {
   isLogin?: boolean;
@@ -49,7 +50,7 @@ export const AuthForm = component$<AuthFormProps>(({ isLogin }) => {
         break;
       case 'phoneNumber': // Add validation for phone number
         isValid = /^[0-9]{10,15}$/.test(value);  // Ensure it's a valid phone number
-        error = isValid ? '' : 'Nambari ya simu ni lazima iwe halali';
+        error = isValid ? '' : 'Nambari ya simu ni lazima iwe sahihi';
         break;
     }
 
@@ -76,7 +77,7 @@ export const AuthForm = component$<AuthFormProps>(({ isLogin }) => {
   const handleSubmit = $(async () => {
     if (state.isLoading) return; // prevent multiple reqs
     if (Object.values(state.valid).every((valid) => valid)) {
-      const endpoint = state.isLogin ? 'https://api.mypostech.store/login' : 'https://api.mypostech.store/register';
+      const endpoint = state.isLogin ? 'http://localhost:3000/login' : 'http://localhost:3000/register';
       state.isLoading = true; // Start loading ...
       try {
         const payload = {
@@ -104,7 +105,7 @@ export const AuthForm = component$<AuthFormProps>(({ isLogin }) => {
           if (state.isLogin) {
             localStorage.setItem("username", state.username || "Guest");
             // Set token cookie manually is not allowed for production in frontend
-            window.location.href = "https://qwik.mypostech.store"; // Redirect to home
+            window.location.href = "http://localhost:5173"; // Redirect to home
           } else {
             // After registration, redirect to login
             setTimeout(() => {
@@ -132,14 +133,14 @@ export const AuthForm = component$<AuthFormProps>(({ isLogin }) => {
   });
 
   return (
-    <div class="flex items-center justify-center min-h-screen bg-gray-100">
-      <div class="bg-white p-6 rounded-lg shadow-md w-96 flex flex-col items-center relative">
+    <div class="flex items-center justify-center min-h-screen bg-gray-300">
+      <div class="bg-white p-6 rounded-lg shadow-md w-96 flex flex-col items-center relative mr-4 ml-4">
         {/* Profile Image */}
         <div class={`absolute -top-12 flex justify-center items-center w-24 h-24 rounded-full border-4 ${state.isLogin ? 'border-double' : 'border-dotted'}`}>
           <img src={state.isLogin ? '/login-image.jpg' : '/register-image.jpg'} class="w-20 h-20 rounded-full" alt={state.isLogin ? 'Ingia' : 'Jisajili'} loading='lazy'/>
         </div>
 
-        <h2 class="text-2xl font-bold mb-12 mt-16">{state.isLogin ? 'Ingia' : 'Jisajili'}</h2>
+        <h2 class="text-2xl font-bold mb-4 mt-10">{state.isLogin ? 'Ingia' : 'Jisajili'}</h2>
 
         {/* Modal Popup */}
         {state.modal.isOpen && (
@@ -212,7 +213,7 @@ export const AuthForm = component$<AuthFormProps>(({ isLogin }) => {
         )}
 
 
-        {/* {state.isLogin && <a href="#" class="text-gray-900 text-sm block text-right mb-2">Umesahau nenosiri?</a>} */}
+        {state.isLogin && <a href="#" class="text-gray-900 text-sm block text-right mb-2">Umesahau nenosiri?</a>}
 
         {/* Submit Button */}
         <button class={`w-full p-2 rounded mt-2 ${state.isLoading ? 'bg-gray-400' : state.isLogin ? 'bg-gray-900 text-white' : 'bg-gray-600 text-white'}`} onClick$={handleSubmit} disabled={state.isLoading}>
@@ -225,6 +226,24 @@ export const AuthForm = component$<AuthFormProps>(({ isLogin }) => {
           
           : state.isLogin ? 'Ingia' : 'Jisajili'}
         </button>
+
+        <div class="w-full flex items-center my-4">
+          <hr class="flex-grow border-gray-400" />
+          <span class="mx-2 text-gray-600 text-sm">au</span>
+          <hr class="flex-grow border-gray-400" />
+        </div>
+
+
+        {/* Google OAuth Button */}
+        <div class="w-full">
+          <a 
+            href="/auth/google" 
+            class={`flex items-center justify-center gap-2 ${state.isLogin ? 'bg-green-200 hover:bg-green-300' : 'bg-yellow-100 hover:bg-yellow-200'} text-gray-900 p-2 transition rounded-4xl border-2 border-gray-600`}
+          >
+            <img src={svgGoogle} alt="Google Logo" class="w-5 h-5" />
+            {state.isLogin ? "Ingia na Google" : "Jisajili na Google"}
+          </a>
+        </div>
 
         {/* Toggle Between Login/Register */}
         <button

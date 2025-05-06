@@ -1,14 +1,14 @@
 import type { RequestHandler } from "@builder.io/qwik-city";
 
-export const onRequest: RequestHandler = async ({ redirect, url }) => {
-  console.log("Middleware triggered for:", url.pathname); // Debugging
-  
-  // Allow public access to auth pages
-  if (url.pathname.startsWith("/auth")) {
-    console.log("Public auth route, skipping auth check.");
-    return;
-  }
+const isPublicRoute = (path: string) =>
+  path.startsWith("/auth") || path.startsWith("/api/translate");
 
+
+export const onRequest: RequestHandler = async ({ redirect, url }) => {
+
+  const path = url.pathname;
+
+  if (isPublicRoute(path)) return;
 
   try {
     // Call the backend to validate the session
@@ -20,13 +20,10 @@ export const onRequest: RequestHandler = async ({ redirect, url }) => {
     const result = await response.json();
 
     if (!result.success) {
-      console.log("Session invalid. Redirecting to /auth");
       throw redirect(302, "/auth");
     }
 
-    console.log("Session valid. User ID:", result.userId);
   } catch (error) {
-    console.error("Error validating session:", error);
     throw redirect(302, "/auth");
   }
 };

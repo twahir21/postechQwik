@@ -1,17 +1,16 @@
-import { component$, useSignal, useTask$ } from "@builder.io/qwik";
+import { component$, useSignal, useVisibleTask$ } from "@builder.io/qwik";
 
 export const Translate = component$((props: { lang: string; keys: string[] }) => {
   const translations = useSignal<Record<string, string>>({});
-
   // Use useTask$ to reactively update translations when `lang` or `keys` change
-  useTask$(async ({ track }) => {
+  useVisibleTask$(async ({ track }) => {
     track(() => props.lang); // Track language changes
     track(() => props.keys); // Track key changes
 
     try {
       const newTranslations: Record<string, string> = {};
       for (const key of props.keys) {
-        const res = await fetch(`https://qwik.mypostech.store/api/translate?lang=${props.lang}&key=${key}`);
+        const res = await fetch(`http://localhost:5173/api/translate?lang=${props.lang}&key=${key}`);
         const data = await res.json();
         newTranslations[key] = data.message || key; // Fallback to key if translation not found
       }

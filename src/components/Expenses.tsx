@@ -30,7 +30,7 @@ export const ExpensesComponent = component$(() => {
 
   useResource$(async () => {
     try {
-      const res = await fetchWithLang("https://api.mypostech.store/analytics", {
+      const res = await fetchWithLang("http://localhost:3000/analytics", {
         credentials: 'include'
       });
 

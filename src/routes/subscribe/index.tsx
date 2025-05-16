@@ -62,6 +62,13 @@ export default component$(() => {
         <p class="text-lg">Lipa kwa namba binafsi ya Halotel: <strong>+255 621 031 195</strong></p>
         <p class="mt-2 text-gray-500">Jina la mpokeaji: TWAHIR SOUD ABDI</p>
       </div>
+
+      <div>
+        <h1>model</h1>
+        <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
+        <model-viewer src="/money.glb" id="bee-model" camera-orbit="45deg 45deg" class="getLeft"></model-viewer>
+
+      </div>
     </div>
   );
 });

@@ -1,6 +1,7 @@
 import { $, component$, useStore } from '@builder.io/qwik';
-import { fetchWithLang } from '~/routes/function/fetchLang';
-import svgGoogle from "../../public/google.svg"
+import svgGoogle from "/google.svg"
+import { env } from '~/routes/api/base/config';
+import { CrudService } from '~/routes/api/base/oop';
 
 interface AuthFormProps {
   isLogin?: boolean;
@@ -33,8 +34,8 @@ export const AuthForm = component$<AuthFormProps>(({ isLogin }) => {
 
     switch (field) {
       case 'name':
-        isValid = value.trim().length > 0;
-        error = isValid ? '' : 'Jina la duka linahitajika';
+        isValid = value.trim().length >= 3;
+        error = isValid ? '' : 'Jina la duka linahitajika, herufi 3 au zaidi';
         break;
       case 'email':
         isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -60,6 +61,7 @@ export const AuthForm = component$<AuthFormProps>(({ isLogin }) => {
 
   // Update field values & validate
   type StateField = keyof Pick<typeof state, "name" | "email" | "username" | "password" | "phoneNumber">;
+  const backendURL = env.mode === 'development' ? env.backendURL_DEV : env.backendURL;
 
   const handleInputChange = $((field: StateField, value: string) => {
     let sanitizedValue = value.trim();
@@ -72,14 +74,51 @@ export const AuthForm = component$<AuthFormProps>(({ isLogin }) => {
     validateField(field, sanitizedValue);
   });
 
+  const getRecaptchaToken = $(() => {
+    const tokenInput = document.getElementById('g-recaptcha-token') as HTMLInputElement | null;
+    if (!tokenInput) return;
+    return tokenInput.value;
+  });
+  
 
 
   const handleSubmit = $(async () => {
     if (state.isLoading) return; // prevent multiple reqs
-    if (Object.values(state.valid).every((valid) => valid)) {
-      const endpoint = state.isLogin ? 'http://localhost:3000/login' : 'http://localhost:3000/register';
+    if (Object.values(state.valid).every((valid) => valid)) {     
+      const endpoint = state.isLogin ? `login` : `register`;
       state.isLoading = true; // Start loading ...
       try {
+        // recaptcha
+        if (!state.isLogin) {
+          const token = await getRecaptchaToken();
+    
+          if (!token) {
+            state.modal = { 
+              isOpen: true, 
+              message: 'Tafadhali hakiki reCAPTCHA!', 
+              isSuccess: false
+            };
+            return;
+          }
+      
+          const recaptchaPayload = {token};
+          interface recaptcha {
+            id?: string;
+            token: string
+          }
+          // send token
+          const sendToken = new CrudService<recaptcha>("verify-captcha");
+          const isVerified = await sendToken.create(recaptchaPayload);
+
+          if (!isVerified.success) {
+            state.modal = { 
+              isOpen: true, 
+              message: isVerified.message || 'Hujaruhusiwa reCAPTCHA imekuzuia', 
+              isSuccess: false
+            };
+            return;
+          }
+        }
         const payload = {
           ...(state.isLogin ? {} : { name: state.name, phoneNumber: state.phoneNumber }),
           email: state.email,
@@ -87,51 +126,67 @@ export const AuthForm = component$<AuthFormProps>(({ isLogin }) => {
           password: state.password,
         };
 
-        const response = await fetchWithLang(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-          credentials: 'include'
-        });
-
-        const result = await response.json();
-
-        if (!response.ok || !result.success) {
-          state.modal = { isOpen: true, message: result.message || 'Tatizo limejitokeza', isSuccess: false };
-        } else {
-          state.modal = { isOpen: true, message: result.message || 'Umefanikiwa', isSuccess: true };
-
-          // 🔄 Conditional redirect logic
-          if (state.isLogin) {
-            localStorage.setItem("username", state.username || "Guest");
-            // Set token cookie manually is not allowed for production in frontend
-            window.location.href = "http://localhost:5173"; // Redirect to home
-          } else {
-            // After registration, redirect to login
-            setTimeout(() => {
-              state.isLogin = true; // Switch to login mode
-            }, 1000);
-          }
-
-          // ✅ Reset state after successful submission
-          state.name = '';
-          state.email = '';
-          state.username = '';
-          state.password = '';
-          state.phoneNumber = '';  // Reset phone number
-          state.errors = {};
-          state.valid = {};
-          state.showPassword = false; // Reset password visibility
+        interface authTypes {
+          id?: string;
+          email: string;
+          username: string;
+          password: string;
+          name?: string;
+          phoneNumber?: string;
         }
+
+        const authApi = new CrudService<authTypes>(endpoint);
+
+        const result = await authApi.create(payload);
+
+        if (!result.success) {
+          state.modal = { 
+            isOpen: true, 
+            message: result.message || 'Hitilafu imetokea wakati wa kutuma', 
+            isSuccess: false 
+          };
+          return;
+        }
+
+
+        state.modal = { 
+          isOpen: true, 
+          message: result.message || 'Umefanikiwa', 
+          isSuccess: true 
+        };
+
+
+        // registration do auto login
+        localStorage.setItem("username", state.username || "Guest");
+        // Set token cookie manually is not allowed for production in frontend
+        const frontendURL = env.mode === 'development'
+                            ? env.frontendURL_DEV
+                            : env.frontendURL;
+
+        window.location.href = `${frontendURL}/private`; // Redirect to dashboard
+      
+
+        // ✅ Reset state after successful submission
+        state.name = '';
+        state.email = '';
+        state.username = '';
+        state.password = '';
+        state.phoneNumber = '';  // Reset phone number
+        state.errors = {};
+        state.valid = {};
+        state.showPassword = false; // Reset password visibility
+        
       } catch (error) {
-        console.error('Network error:', error);
-        state.modal = { isOpen: true, message: 'Tatizo la mtandao. Tafadhali jaribu tena', isSuccess: false };
+        state.modal = { 
+          isOpen: true, 
+          message: error instanceof Error ? error.message : 'Tatizo la mtandao. Tafadhali jaribu tena', 
+          isSuccess: false 
+        };
       } finally {
         state.isLoading = false; // end loading ...
       }
     }
   });
-
   return (
     <div class="flex items-center justify-center min-h-screen bg-gray-300">
       <div class="bg-white p-6 rounded-lg shadow-md w-96 flex flex-col items-center relative mr-4 ml-4">
@@ -215,6 +270,23 @@ export const AuthForm = component$<AuthFormProps>(({ isLogin }) => {
 
         {state.isLogin && <a href="#" class="text-gray-900 text-sm block text-right mb-2">Umesahau nenosiri?</a>}
 
+        <script
+          dangerouslySetInnerHTML={`
+            var onloadCallback = function() {
+              grecaptcha.render('html_element', {
+                'sitekey': '6LfiETQrAAAAAKO2-kg1mBvKls6462H1kWzpD2eF',
+                'callback': function(response) {
+                  document.getElementById('g-recaptcha-token').value = response;
+                }
+              });
+            };
+          `}
+        />
+        {!state.isLogin && <div id="html_element"></div>}
+        <input type="hidden" id="g-recaptcha-token" name="g-recaptcha" />
+
+
+
         {/* Submit Button */}
         <button class={`w-full p-2 rounded mt-2 ${state.isLoading ? 'bg-gray-400' : state.isLogin ? 'bg-gray-900 text-white' : 'bg-gray-600 text-white'}`} onClick$={handleSubmit} disabled={state.isLoading}>
           {state.isLoading ?           
@@ -235,15 +307,14 @@ export const AuthForm = component$<AuthFormProps>(({ isLogin }) => {
 
 
         {/* Google OAuth Button */}
-        <div class="w-full">
-          <a 
-            href="/auth/google" 
-            class={`flex items-center justify-center gap-2 ${state.isLogin ? 'bg-green-200 hover:bg-green-300' : 'bg-yellow-100 hover:bg-yellow-200'} text-gray-900 p-2 transition rounded-4xl border-2 border-gray-600`}
-          >
-            <img src={svgGoogle} alt="Google Logo" class="w-5 h-5" />
-            {state.isLogin ? "Ingia na Google" : "Jisajili na Google"}
-          </a>
-        </div>
+        <button
+          onClick$={() => window.location.href = `${backendURL}/auth/google`}
+          class={`w-full flex items-center justify-center gap-2 ${state.isLogin ? 'bg-green-200 hover:bg-green-300' : 'bg-yellow-100 hover:bg-yellow-200'} text-gray-900 p-2 transition rounded-4xl border-2 border-gray-600`}
+        >
+          <img src={svgGoogle} alt="Google Logo" class="w-5 h-5" />
+          {state.isLogin ? "Ingia na Google" : "Jisajili na Google"}
+        </button>
+
 
         {/* Toggle Between Login/Register */}
         <button
@@ -262,6 +333,7 @@ export const AuthForm = component$<AuthFormProps>(({ isLogin }) => {
           {state.isLogin ? 'Huna akaunti? Jisajili' : 'Tayari una akaunti? Ingia'}
         </button>
       </div>
+      {!state.isLogin && <script src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit" async defer></script>}
     </div>
   );
 });

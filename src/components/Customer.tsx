@@ -33,7 +33,7 @@ export const CustomerComponent =  component$((props:{lang: string}) => {
     const name = customer.name.trim().toLowerCase();
     const contact = customer.contact.trim().toLowerCase();
 
-    const response = await fetchWithLang("https://api.mypostech.store/customers", {
+    const response = await fetchWithLang("http://localhost:3000/customers", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",

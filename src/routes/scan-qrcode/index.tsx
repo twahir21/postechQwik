@@ -40,7 +40,7 @@ export default component$(() => {
   });
 
   useVisibleTask$(() => {
-    fetchWithLang('https://api.mypostech.store/getCustomers', {
+    fetchWithLang('http://localhost:3000/getCustomers', {
       method: "GET",
       credentials: "include", 
       headers: {
@@ -153,7 +153,7 @@ const handleSubmit = $(async () => {
 
 
     // Send POST request to the backend
-    const response = await fetchWithLang("https://api.mypostech.store/get-data", {
+    const response = await fetchWithLang("http://localhost:3000/get-data", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -10,10 +10,12 @@ type SalesData = {
 
 export const Graph = component$((props: {lang: string, data: SalesData[] }) => {
   useVisibleTask$(async () => {
-    await fetchWithLang("https://api.mypostech.store/analytics", {
+    await fetchWithLang("http://localhost:3000/analytics", {
       credentials: 'include'
     });
   });
+
+  console.log("Data: ", props.data)
 
   useVisibleTask$(() => {
     const canvas = document.getElementById("salesChart") as HTMLCanvasElement | null;

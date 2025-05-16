@@ -1,3 +1,4 @@
+import { env } from "../api/base/config";
 import { fetchWithLang } from "./fetchLang";
 
 interface categTypesafe  {
@@ -17,7 +18,11 @@ export const globalStore = {
 
 export const fetchSuppliers = async () => {
     try {
-      const res = await fetchWithLang("https://api.mypostech.store/suppliers", {
+      const backendURL = env.mode === 'development'
+                          ? env.backendURL_DEV
+                          : env.backendURL;
+
+      const res = await fetchWithLang(`${backendURL}/suppliers`, {
         method: "GET",
         credentials: "include",
       });
@@ -38,7 +43,11 @@ export const fetchSuppliers = async () => {
 
 export const fetchCategories = async () => {
     try {
-      const res = await fetchWithLang("https://api.mypostech.store/categories", {
+      const backendURL = env.mode === 'development'
+                      ? env.backendURL_DEV
+                      : env.backendURL;
+                      
+      const res = await fetchWithLang(`${backendURL}/categories`, {
         method: "GET",
         credentials: "include",
       });

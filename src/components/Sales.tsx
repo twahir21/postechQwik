@@ -41,7 +41,7 @@ export const SalesComponent = component$(() => {
 
     try {
       console.log(params);
-      const res = await fetch(`https://api.mypostech.store/sales?${params}`, {
+      const res = await fetch(`http://localhost:3000/sales?${params}`, {
         credentials: 'include'
       });
       const data = await res.json();
@@ -191,7 +191,7 @@ export const SalesComponent = component$(() => {
 
           {/* Export CSV */}
           <a
-            href={`https://api.mypostech.store/export-sales`}
+            href={`http://localhost:3000/export-sales`}
             class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-900"
           >
             ⬇️ Export CSV

@@ -1,34 +1,66 @@
 import { component$, Slot, useContextProvider, useSignal, useStore } from "@builder.io/qwik";
 import type { RequestHandler } from "@builder.io/qwik-city";
 import { RefetchContext } from "~/components/context/refreshContext";
-import { globalStoreContext, globalStoreTypes } from "~/components/context/store/globalStore";
+import { globalStoreContext } from "~/components/context/store/globalStore";
+import type { globalStoreTypes } from "~/components/context/store/globalStore";
+import { CrudService } from "./api/base/oop";
 
-export const onGet: RequestHandler = async ({ cacheControl, cookie, redirect, url }) => {
-  // Control caching for this request for best performance and to reduce hosting costs:
-  // https://qwik.dev/docs/caching/
-  cacheControl({
-    // Always serve a cached response by default, up to a week stale
-    staleWhileRevalidate: 60 * 60 * 24 * 7,
-    // Max once every 5 seconds, revalidate on the server to get a fresh version of this page
-    maxAge: 5,
-  });
 
-  // Allow public access to the translate API route
-  if (url.pathname.startsWith("/api/translate")) {
-    return; // Skip the auth check and continue to the API logic
+
+// Store rate data by IP
+const rateLimitMap = new Map<string, { count: number; timestamp: number; blockedUntil?: number }>();
+
+const RATE_LIMIT = 100;
+const TIME_WINDOW = 10 * 1000; // 10 sec
+const BLOCK_DURATION = 5 * 60 * 1000; // 5 min
+
+export const onGet: RequestHandler = async ({ url, cookie, request, redirect, error }) => {
+  const ip =
+    request.headers.get("x-forwarded-for") ||
+    request.headers.get("cf-connecting-ip") ||
+    request.headers.get("x-real-ip") ||
+    "127.0.0.1";
+
+  const now = Date.now();
+  const record = rateLimitMap.get(ip) ?? { count: 0, timestamp: now };
+
+  // Blocked? Refuse request
+  if (record.blockedUntil && now < record.blockedUntil) {
+    console.warn(`Blocked IP ${ip} tried again before cooldown.`);
+    throw error(429, "Too Many Requests - Try again in 5 minutes.");
   }
-  // Allow public access to auth pages
-  if (url.pathname.startsWith("/auth")) {
-    console.log("Public auth route, skipping auth check.");
-    return;
+
+  // Reset if window passed
+  if (now - record.timestamp > TIME_WINDOW) {
+    record.count = 1;
+    record.timestamp = now;
+    delete record.blockedUntil;
+  } else {
+    record.count++;
   }
 
-  // Read auth_token from cookies
-  const authToken = cookie.get("auth_token");
+  // Block if exceeded
+  if (record.count > RATE_LIMIT) {
+    console.warn(`Rate limit exceeded by ${ip}, blocking for 5 min.`);
+    record.blockedUntil = now + BLOCK_DURATION;
+    rateLimitMap.set(ip, record);
+    throw error(429, "Too Many Requests - Try again in 5 minutes.");
+  }
 
-  if (!authToken) {
-    throw redirect(302, "/auth");
-  } 
+  rateLimitMap.set(ip, record);
+
+  // Auth logic
+  const isPrivate = url.pathname.startsWith("/private") || url.pathname.startsWith("/api/translate");
+  if (isPrivate) {
+    const token = cookie.get('auth_token')?.value;
+    const tokenPayload = {token}
+
+    const verifyApi = new CrudService<{ id?: string; token: string }>("verify-cookie");
+    
+    const isVerified = await verifyApi.postEarly(tokenPayload);
+    if (!isVerified.success) throw redirect(302, "/auth");
+  }
+
 };
 
 export default component$(() => {
@@ -46,8 +78,9 @@ export default component$(() => {
     customerRefetch,
     qrCodeRefetch,
     supplierRefetch,
-    categoryRefetch
+    categoryRefetch,
   });
+
 
   // globalStore
 const globalStore = useStore<globalStoreTypes>({

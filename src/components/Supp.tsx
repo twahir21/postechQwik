@@ -1,14 +1,9 @@
-import { component$, useSignal, useTask$, $, useContext } from '@builder.io/qwik';
-import { fetchWithLang } from '~/routes/function/fetchLang';
+import { component$, useSignal, useTask$, $, useContext, useStore } from '@builder.io/qwik';
 import { Translate } from './Language';
 import { RefetchContext } from './context/refreshContext';
+import { CrudService } from '~/routes/api/base/oop';
+import type { Supplier } from '~/routes/api/base/typeSafe';
 
-interface Supplier {
-  id: string;
-  company: string;
-  contact: string
-  createdAt: string;
-}
 
 export const SuppCrudComponent =  component$((props: {lang: string }) => {
   const supplier = useSignal<Supplier[]>([]);
@@ -21,39 +16,28 @@ export const SuppCrudComponent =  component$((props: {lang: string }) => {
   const isEditing = useSignal(false);
   const isDeleting = useSignal(false);
 
+  const modal = useStore({
+    isSuccess: false as boolean,
+    isOpen: false as boolean,
+    message: '' as string
+  });
+
 
   const fetchSuppliers = $(async () => {
     isLoading.value = true;
-    try {
-      const res = await fetchWithLang(
-        `https://api.mypostech.store/suppliers?search=${encodeURIComponent(search.value)}&page=${currentPage.value}&limit=${perPage}`,{
-          method: 'GET',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept-Language': 'sw', // Adjust as necessary
-          },
-        }
-      );
+    const fetchSupplierApi = new CrudService<Supplier>(`suppliers?search=${encodeURIComponent(search.value)}&page=${currentPage.value}&limit=${perPage}`);
+    const result = await fetchSupplierApi.get();
 
-      if (!res.ok) {
-        const text = await res.text(); // fallback for non-JSON errors
-        throw new Error(`Imeshindwa kujibu kuhusu wateja: ${text}`);
-      }
-
-
-      const json = await res.json();
-      if (!json.success) {
-        throw new Error(json.message || 'Imeshindwa kuleta supplier kutoka kwenye seva');
-      }
-      supplier.value = json.data;
-
-      total.value = json.total;
-    } catch (err) {
-      console.error('Imeshindwa kuleta supplier:', err);
-    } finally {
-      isLoading.value = false;
+    if (!result.success) {
+      // give popup
+      modal.isOpen = true;
+      modal.isSuccess = false,
+      modal.message = result.message || "Hitilafu wakati wa kutuma ombi lako";
+      return;
     }
+    supplier.value = result.data;
+    // reset loading
+    isLoading.value = false;
   });
 
   const { supplierRefetch } = useContext(RefetchContext);
@@ -74,27 +58,26 @@ export const SuppCrudComponent =  component$((props: {lang: string }) => {
   });
   
   const deleteSupplier = $(async (supplierId: string) => {
-    try {
-      const res = await fetchWithLang(`https://api.mypostech.store/suppliers/${supplierId}`, {
-        method: 'DELETE',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-  
-      if (!res.ok) {
-        const text = await res.text(); // Fallback for non-JSON errors
-        throw new Error(`Imeshindwa kufuta muuzaji: ${text}`);
-      }
-  
-      // If deletion is successful, remove the supplier from the list
-      supplier.value = supplier.value.filter(supplier => supplier.id !== supplierId);
-    } catch (err) {
-      console.error('Imeshindwa kufika kwa seva za muuzaji: ', err);
-    } finally {
-      isDeleting.value = false;
+    const deleteSupplierApi = new CrudService<Supplier>("suppliers");
+
+    const result = await deleteSupplierApi.delete(supplierId);
+    if (!result.success) {
+      // initialize the popup
+      modal.isSuccess = false;
+      modal.isOpen = true;
+      modal.message = result.message || "Tatizo la kimtandao, jaribu tena"
+      return;
     }
+
+    modal.isOpen = true;
+    modal.isSuccess = true;
+    modal.message = result.message || "Umefanikiwa"
+    // If deletion is successful, remove the supplier from the list
+    supplier.value = supplier.value.filter(supplier => supplier.id !== supplierId);
+
+    // reset delete flag
+    isDeleting.value = false;
+
   });
   
 
@@ -150,7 +133,7 @@ export const SuppCrudComponent =  component$((props: {lang: string }) => {
                         isDeleting.value = true;
                         }}
                     >
-                        Delete
+                        Futa
                     </button>
                     </div>
 
@@ -183,7 +166,7 @@ export const SuppCrudComponent =  component$((props: {lang: string }) => {
                     isDeleting.value = true;
                   }}
                 >
-                  Delete
+                  Futa
                 </button>
               </div>
             </div>
@@ -199,24 +182,24 @@ export const SuppCrudComponent =  component$((props: {lang: string }) => {
         disabled={currentPage.value === 1}
         class="px-4 py-2 bg-gray-200 text-sm rounded disabled:opacity-50"
         >
-          Previous
+          Nyuma
         </button>
         <span class="text-sm">
-          Page {currentPage.value} of {totalPages()}
+          Kurasa ya {currentPage.value} kati ya {totalPages()}
         </span>
         <button
           onClick$={() => currentPage.value++}
           disabled={currentPage.value >= totalPages()}
           class="px-4 py-2 bg-gray-200 text-sm rounded disabled:opacity-50"
         >
-          Next
+          Mbele
         </button>
       </div>
 
       {isEditing.value && selectedSupplier.value && (
   <div class="fixed inset-0 flex items-center justify-center z-10 bg-gray-600 bg-opacity-50">
     <div class="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
-      <h2 class="text-lg font-semibold">Edit Supplier</h2>
+      <h2 class="text-lg font-semibold">Edit Muuzaji</h2>
 
       <div class="mt-4">
         <label class="block text-sm"><Translate lang={props.lang} keys={['name']} /></label>
@@ -245,35 +228,24 @@ export const SuppCrudComponent =  component$((props: {lang: string }) => {
         <button
           class="px-4 py-2 bg-gray-700 text-white rounded"
           onClick$={async () => {
-            try {
-              const res = await fetchWithLang(`https://api.mypostech.store/suppliers/${selectedSupplier.value!.id}`, {
-                method: 'PUT',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Accept-Language': 'sw', // Adjust as necessary
-                },
-                body: JSON.stringify(selectedSupplier.value),
-                credentials: 'include',
-              });
+            const editSupplierApi = new CrudService<Supplier>("suppliers");
+            const result = await editSupplierApi.update(selectedSupplier.value!.id, selectedSupplier.value!);
 
-              supplierRefetch.value = true;
-              if (!res.ok) {
-                const text = await res.text();
-                throw new Error(`Imeshindwa ku-update muuzaji: ${text}`);
-              }
-              const updatedSupplier = await res.json();
-              // Update Supplier in the local list
-              const index = supplier.value.findIndex(p => p.id === updatedSupplier.id);
-              if (index > -1) {
-                supplier.value[index] = updatedSupplier;
-              }
-              isEditing.value = false;
-            } catch (err) {
-              console.error('Imeshindwa ku-update muuzaji:', err);
+            if (!result.success) {
+              modal.isOpen = true,
+              modal.isSuccess = false,
+              modal.message = result.message || "Hitilafu imetokea, jaribu baadae";
+              return;
             }
+            // Update Supplier in the local list
+            const index = supplier.value.findIndex(p => p.id === result.data.id);
+            if (index > -1) {
+              supplier.value[index] = result.data;
+            }
+            isEditing.value = false;
           }}
         >
-          Save
+          Hifadhi
         </button>
         <button
           class="px-4 py-2 bg-gray-300 text-black rounded"
@@ -282,25 +254,37 @@ export const SuppCrudComponent =  component$((props: {lang: string }) => {
             selectedSupplier.value = null;
           }}
         >
-          Cancel
+          Ghairi
         </button>
       </div>
     </div>
   </div>
 )}
 
+{/* Modal Popup */}
+{modal.isOpen && (
+<div class="fixed inset-0 flex items-center justify-center bg-opacity-50 bg-neutral-500 z-50">
+<div class="bg-white p-6 rounded shadow-lg text-center">
+    <p class={modal.isSuccess ? 'text-green-600' : 'text-red-600'}>{modal.message}</p>
+    <button class="mt-4 bg-blue-500 text-white px-4 py-2 rounded" onClick$={() => (modal.isOpen = false)}>
+    Ok
+    </button>
+</div>
+</div>
+)}
+
 
 {isDeleting.value && (
   <div class="fixed inset-0 flex items-center justify-center z-10 bg-gray-600 bg-opacity-50">
     <div class="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
-      <h2 class="text-lg font-semibold">Confirm Deletion</h2>
-      <p class="mt-2 text-sm">Are you sure you want to delete this supplier?</p>
+      <h2 class="text-lg font-semibold">Hakiki Ufutaji</h2>
+      <p class="mt-2 text-sm">Je, una uhakika unataka kumfuta huyu msambazaji?</p>
       <div class="mt-4 flex gap-2">
         <button
           class="px-4 py-2 bg-red-500 text-white rounded"
           onClick$={() => deleteSupplier(selectedSupplier.value!.id)}
         >
-          Delete
+          Futa
         </button>
         <button
           class="px-4 py-2 bg-gray-300 text-black rounded"
@@ -309,7 +293,7 @@ export const SuppCrudComponent =  component$((props: {lang: string }) => {
             selectedSupplier.value = null;
           }}
         >
-          Cancel
+          Ghairi
         </button>
       </div>
     </div>

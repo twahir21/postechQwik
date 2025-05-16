@@ -9,7 +9,7 @@ export const MainGraph =  component$(() => {
   const selected = useSignal<'debts' | 'cash' | 'expenses' | 'stock' | null>(null);
   useResource$(async () => {
     try {
-      const res = await fetchWithLang("https://api.mypostech.store/graph", {
+      const res = await fetchWithLang("http://localhost:3000/graph", {
         credentials: 'include'
       });
   

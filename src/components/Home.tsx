@@ -1,8 +1,8 @@
 import { component$, useSignal, useStore, useVisibleTask$ } from "@builder.io/qwik";
-import { Translate } from "./Language";  // Make sure this is the correct path
 import { RecentProductsTable } from "./Recent";
 import { Graph } from "./Graph";
 import { fetchWithLang } from "~/routes/function/fetchLang";
+import { Translate } from "./Language";
 
 export const HomeComponent = component$((props: { lang: string }) => {
 
@@ -30,7 +30,7 @@ export const HomeComponent = component$((props: { lang: string }) => {
 
 
   useVisibleTask$(async() => {
-    const res = await fetchWithLang("https://api.mypostech.store/analytics", {
+    const res = await fetchWithLang("http://localhost:3000/analytics", {
       credentials: 'include'
     });
 

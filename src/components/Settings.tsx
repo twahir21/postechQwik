@@ -1,5 +1,6 @@
 // src/components/SettingsPage.tsx
 import { component$, useSignal, useStore, useResource$, $ } from '@builder.io/qwik';
+import { CrudService } from '~/routes/api/base/oop';
 import { fetchWithLang } from '~/routes/function/fetchLang';
 
 export const SettingsComponent = component$(() => {
@@ -16,7 +17,7 @@ export const SettingsComponent = component$(() => {
     newPassword?: string;
     confirmPassword?: string;
     isTrial?: boolean;
-    trialEnds?: string; // You could use `Date` if you want stricter typing
+    trialEnds?: string;
     isLoading?:boolean;
     isPassword?:boolean;
     isDelete?:boolean;
@@ -43,9 +44,25 @@ export const SettingsComponent = component$(() => {
   // logic for shopName and email
   useResource$(async () => {
     if (store.isLoading) return; // prevent multiple reqs
+    interface shopInfo {
+      id: string,
+      email: { email: string},
+      shopName: { shopName: string}
+    }
+    const shopApi = new CrudService<shopInfo>("shop");
+    
+    const result = await shopApi.get();
+    console.log("DATA: ", result);
+
+    if (!result.success) {
+      return;
+    }
+    console.log("ShopInfo: ", result.data[0].email.email)
+    // store.email = result.data[0].email;
+    // store.shopName = result.data.shopName;
     try {
       store.isLoading = true; // Start loading ...
-      const response = await fetchWithLang("https://api.mypostech.store/shop", {
+      const response = await fetchWithLang("http://localhost:3000/shop", {
         credentials: 'include'
       });
   
@@ -78,7 +95,7 @@ export const SettingsComponent = component$(() => {
         shopName: store.shopName
       };
   
-      const req = await fetchWithLang("https://api.mypostech.store/shop", {
+      const req = await fetchWithLang("http://localhost:3000/shop", {
         credentials: 'include',
         method: "PUT",
         headers: {
@@ -115,7 +132,7 @@ export const SettingsComponent = component$(() => {
         newPassword: newPassword.value
       };
   
-      const req = await fetchWithLang("https://api.mypostech.store/update-password", {
+      const req = await fetchWithLang("http://localhost:3000/update-password", {
         credentials: 'include',
         method: "PUT",
         headers: {
@@ -145,7 +162,7 @@ export const SettingsComponent = component$(() => {
 
       store.isDelete = true;
       try {
-        const req = await fetchWithLang("https://api.mypostech.store/delete-shop", {
+        const req = await fetchWithLang("http://localhost:3000/delete-shop", {
           credentials: 'include',
           method: "DELETE",
           headers: {

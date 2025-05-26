@@ -1,4 +1,3 @@
-import { fetchWithLang } from "~/routes/function/fetchLang";
 import type { CrudItem, CrudResponse } from "./typeSafe";
 import { env } from "./config";
 
@@ -35,7 +34,7 @@ class CrudService<T extends CrudItem> {
 
   async get(): Promise<CrudResponse<T[]>> {
     try {
-      const res = await fetchWithLang(this.baseUrl, 
+      const res = await fetch(this.baseUrl, 
         { 
           method: 'GET', 
           credentials: 'include',
@@ -52,7 +51,7 @@ class CrudService<T extends CrudItem> {
 
   async getById(id: string): Promise<CrudResponse<T>> {
     try {
-      const res = await fetchWithLang(`${this.baseUrl}/${id}`, {
+      const res = await fetch(`${this.baseUrl}/${id}`, {
         method: 'GET',
         credentials: 'include'
       });
@@ -68,7 +67,7 @@ class CrudService<T extends CrudItem> {
 
   async create(data: Partial<T>): Promise<CrudResponse<T>> {
     try {
-      const res = await fetchWithLang(this.baseUrl, {
+      const res = await fetch(this.baseUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -87,9 +86,9 @@ class CrudService<T extends CrudItem> {
     }
   }
 
-  async update(id: string, data: Partial<T>): Promise<CrudResponse<T>> {
+  async update(data: Partial<T>): Promise<CrudResponse<T>> {
     try {
-      const res = await fetchWithLang(`${this.baseUrl}/${id}`, {
+      const res = await fetch(`${this.baseUrl}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -107,11 +106,29 @@ class CrudService<T extends CrudItem> {
     }
   }
 
-  async delete(id: string): Promise<CrudResponse<void>> {
+    async updateById(data: Partial<T>, id: string): Promise<CrudResponse<T>> {
     try {
-      const res = await fetchWithLang(`${this.baseUrl}/${id}`, {
+      const res = await fetch(`${this.baseUrl}/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data),
+        credentials: 'include'
+      });
+
+      return await res.json();
+    } catch (err) {
+      return {
+        success: false,
+        message: err instanceof Error ? err.message : "Imeshindwa ku-update taarifa"
+      };
+    }
+  }
+    async delete(id: string): Promise<CrudResponse<void>> {
+    try {
+      const res = await fetch(`${this.baseUrl}/${id}`, {
         method: 'DELETE',
-        // mode: "cors", // allow cors if server permit (prevent cors errors) is set by default 
         credentials: 'include'
       });
 
@@ -123,6 +140,23 @@ class CrudService<T extends CrudItem> {
       };
     }
   }
+
+  async deleteAll(): Promise<CrudResponse<void>> {
+    try {
+      const res = await fetch(`${this.baseUrl}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+
+      return await res.json();
+    } catch (err) {
+      return {
+        success: false,
+        message: err instanceof Error ? err.message : "Imeshindwa kufuta taarifa"
+      };
+    }
+  }
+  
 }
 
 export { CrudService };

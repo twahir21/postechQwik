@@ -1,6 +1,8 @@
 import { $, component$, useStore } from '@builder.io/qwik';
+import { useNavigate } from '@builder.io/qwik-city';
 import { env } from '~/routes/api/base/config';
 import { CrudService } from '~/routes/api/base/oop';
+import { Toast } from './ui/Toast';
 
 interface AuthFormProps {
   isLogin?: boolean;
@@ -25,6 +27,8 @@ export const AuthForm = component$<AuthFormProps>(({ isLogin }) => {
     },
     isLoading: false
   });
+
+  const navigation = useNavigate();
 
   // Real-time validation
   const validateField = $((field: string, value: string) => {
@@ -156,13 +160,12 @@ export const AuthForm = component$<AuthFormProps>(({ isLogin }) => {
 
 
         // registration do auto login
-        localStorage.setItem("username", state.username || "Guest");
         // Set token cookie manually is not allowed for production in frontend
         const frontendURL = env.mode === 'development'
                             ? env.frontendURL_DEV
                             : env.frontendURL;
 
-        window.location.href = `${frontendURL}/private`; // Redirect to dashboard
+        navigation(`${frontendURL}/private`); // Redirect to dashboard
       
 
         // ✅ Reset state after successful submission
@@ -198,14 +201,14 @@ export const AuthForm = component$<AuthFormProps>(({ isLogin }) => {
 
         {/* Modal Popup */}
         {state.modal.isOpen && (
-          <div class="fixed inset-0 flex items-center justify-center bg-opacity-50 bg-neutral-500 z-50">
-            <div class="bg-white p-6 rounded shadow-lg text-center">
-              <p class={state.modal.isSuccess ? 'text-green-600' : 'text-red-600'}>{state.modal.message}</p>
-              <button class="mt-4 bg-blue-500 text-white px-4 py-2 rounded" onClick$={() => (state.modal.isOpen = false)}>
-                Ok
-              </button>
-            </div>
-          </div>
+          <Toast
+          isOpen={state.modal.isOpen}
+          type={state.modal.isSuccess}
+          message={state.modal.message}
+          onClose$={$(() => {
+            state.modal.isOpen = false;
+          })}
+          />
         )}
 
         {/* Jina la Duka (Only for Registration) */}
@@ -307,7 +310,7 @@ export const AuthForm = component$<AuthFormProps>(({ isLogin }) => {
 
         {/* Google OAuth Button */}
         <button
-          onClick$={() => window.location.href = `${backendURL}/auth/google`}
+          onClick$={() => navigation(`${backendURL}/auth/google`)}
           class={`w-full flex items-center justify-center gap-2 ${state.isLogin ? 'bg-green-200 hover:bg-green-300' : 'bg-yellow-100 hover:bg-yellow-200'} text-gray-900 p-2 transition rounded-4xl border-2 border-gray-600`}
         >
           <img src="/google.svg" alt="Google Logo" class="w-5 h-5" />

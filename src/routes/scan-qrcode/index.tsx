@@ -6,7 +6,8 @@ import {
   useVisibleTask$,
 } from "@builder.io/qwik";
 import { useLocation } from "@builder.io/qwik-city";
-import { fetchWithLang } from "../function/fetchLang";
+import { CrudService } from "../api/base/oop";
+import { Toast } from "~/components/ui/Toast";
 
 export default component$(() => {
   const location = useLocation();
@@ -29,7 +30,6 @@ export default component$(() => {
     showCalculator: false,
     input: "",
     isSubmitting: false, // Track if submission is in progress
-    submitTimer: 0, // Countdown timer (in seconds),
     modal: {
       isOpen: false,
       message: '',
@@ -39,29 +39,14 @@ export default component$(() => {
     customers: [] as { id: string; name: string }[],
   });
 
-  useVisibleTask$(() => {
-    fetchWithLang('http://localhost:3000/getCustomers', {
-      method: "GET",
-      credentials: "include", 
-      headers: {
-        "Accept-Language": "sw",
-        "Content-Type": "application/json"
-      }
-    })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then(data => {
-        state.customers = data.data; // Update state with fetched customers
+  useVisibleTask$(async() => {
+    interface customers {id: string; name: string}
+    const getCustomersApi = new CrudService<customers>("getCustomers");
+    const customersData = await getCustomersApi.get();
+    if(!customersData.success) return;
 
-      })
-      .catch(error => {
-        console.error("Error fetching customers:", error);
-      });
-  });
+    state.customers = customersData.data
+  })
 
   // Parse URL parameters and initialize state
   useTask$(() => {
@@ -80,7 +65,7 @@ export default component$(() => {
     });
 
     state.query = params;
-    state.generatedAt = params.generatedAt || "Not provided"; // Store generatedAt with a fallback
+    state.generatedAt = params.generatedAt || "Hakuna"; // Store generatedAt with a fallback
     state.editableFields.quantity = params.quantity || "1";
     state.editableFields.saleType = params.saleType || "cash";
     state.editableFields.discount = params.discount || "0";
@@ -112,93 +97,65 @@ export default component$(() => {
 
 // Handle form submission with a 4-second cooldown
 const handleSubmit = $(async () => {
-  if (state.isSubmitting) return; // Prevent multiple submissions
+  if (state.isSubmitting) return;
 
-  try {
-    state.isSubmitting = true; // Disable the button
-    state.submitTimer = 4; // Start the countdown from 4 seconds
+  state.isSubmitting = true;
 
-    // Convert quantity and discount to numbers
-    const numericQuantity = parseFloat(state.editableFields.quantity);
-    const numericDiscount = parseFloat(state.editableFields.discount);
+  const numericQuantity = parseFloat(state.editableFields.quantity);
+  const numericDiscount = parseFloat(state.editableFields.discount);
 
-    // Ensure valid numbers (fallback to defaults if NaN)
-    const validatedQuantity = isNaN(numericQuantity) ? 1 : numericQuantity;
-    const validatedDiscount = isNaN(numericDiscount) ? 0 : numericDiscount;
+  const validatedQuantity = isNaN(numericQuantity) ? 1 : numericQuantity;
+  const validatedDiscount = isNaN(numericDiscount) ? 0 : numericDiscount;
 
-    // check product id
-    if (!state.productId || state.productId === "") {
-      state.modal = {
-        isOpen: true,
-        message: "Product ID is required!",
-        isSuccess: false
-      };
-      return;
-    }
-    
-
-    // Prepare the data to send to the backend
-    const requestData = {
-      ...state.query,
-      ...state.editableFields,
-      quantity: validatedQuantity, // Use validated quantity
-      discount: validatedDiscount, // Use validated discount
-      productId: state.productId,
-      priceSold: Number(state.query.priceSold),
-      priceBought: Number(state.query.priceBought),
-      supplierId: state.supplierId,
-      customerId: state.customerId,
-      calculatedTotal: state.calculatedTotal,
-    };
-
-
-    // Send POST request to the backend
-    const response = await fetchWithLang("http://localhost:3000/get-data", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Accept-Language": "sw", // Default language
-      },
-      body: JSON.stringify(requestData),
-      credentials: "include", // Include cookies or authentication tokens
-    });
-
-
-    // Check if the response is successful
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-
-    // Parse the response (if needed)
-    const responseData = await response.json();
-
-    // Log success message
+  if (!state.productId) {
     state.modal = {
       isOpen: true,
-      message: responseData.message || "Umefanikiwa",
-      isSuccess: true
-      
-    }
-  } catch (error) {
-    // Handle errors
-    state.modal = {
-      isOpen: true,
-      message: "Tatizo limejitokeza",
+      message: "Product ID inatakiwa!",
       isSuccess: false
-      
-    }  
-  } finally {
-    // Countdown timer logic
-    const interval = setInterval(() => {
-      state.submitTimer -= 1; // Decrement the timer
-      if (state.submitTimer <= 0) {
-        clearInterval(interval); // Stop the timer
-        state.isSubmitting = false; // Re-enable the button
-        state.submitTimer = 0; // Reset the timer
-      }
-    }, 1000);
+    };
+    state.isSubmitting = false;
+    return;
   }
+
+  const requestData = {
+    ...state.query,
+    ...state.editableFields,
+    quantity: validatedQuantity,
+    discount: validatedDiscount,
+    productId: state.productId,
+    priceSold: Number(state.query.priceSold),
+    priceBought: Number(state.query.priceBought),
+    supplierId: state.supplierId,
+    customerId: state.customerId,
+    calculatedTotal: state.calculatedTotal,
+  };
+
+        interface sendData {
+        id?: string;
+        quantity: number;
+        discount: number;
+        productId: string;
+        priceSold: number;
+        priceBought: number;
+        supplierId: string;
+        customerId: string;
+        calculatedTotal: number;
+        saleType: string;
+        description: string;
+        typeDetected: string;
+    }
+
+  const sendDataApi = new CrudService<sendData>("get-data");
+  const sendResult = await sendDataApi.create(requestData);
+  state.isSubmitting = false;
+
+  state.modal = {
+    isOpen: true,
+    message: sendResult.message || (sendResult.success ? "Umefanikiwa" : "Tatizo limejitokeza"),
+    isSuccess: sendResult.success
+  };
 });
+
 
 const handleButtonClick = $((btn: string) => {
   if (btn === "C") {
@@ -218,13 +175,13 @@ const handleButtonClick = $((btn: string) => {
   return (
     <div class="p-4 max-w-2xl mx-auto text-sm sm:text-base">
       <h1 class="text-xl sm:text-2xl font-bold mb-4 text-gray-800">
-        📦 QR Code Product Data
+        📦 Taarifa za bidhaa kutoka kwa QR Code 
       </h1>
 
       {state.isLoading ? (
         <p class="text-gray-600">Loading...</p>
       ) : Object.keys(state.query).length === 0 ? (
-        <p class="text-red-500">❌ No valid query parameters found!</p>
+        <p class="text-red-500">❌ Hakuna query parameters zilizopatikana!</p>
       ) : (
         <div class="bg-white rounded-xl shadow-lg p-4 border border-gray-200 space-y-4">
           {/* Display product details */}
@@ -301,7 +258,7 @@ const handleButtonClick = $((btn: string) => {
 
           <div class="relative inline-block group cursor-help">
             <p class="text-green-600 underline">
-              ℹ️ Click here (Quantity)
+              ℹ️ Bonyeza hapa (Jinsi ya kuweka hisa)
             </p>
             <div class="absolute z-10 hidden group-hover:block bg-white border border-gray-300 text-sm text-gray-700 p-2 rounded-md shadow-md w-64 mt-2">
               <p>🟢 <strong>Robo</strong> = 0.25</p>
@@ -328,22 +285,22 @@ const handleButtonClick = $((btn: string) => {
 
             <div>
               <label class="block text-gray-600 font-medium mb-1">
-                Type Detected
+                Aina iliyoonekana
               </label>
               <select
                 value={state.editableFields.typeDetected}
                 onChange$={(e) => handleChange(e, "typeDetected")}
                 class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-300"
               >
-                <option value="sales">Sales</option>
-                <option value="purchases">Purchases</option>
-                <option value="expenses">Expenses</option>
+                <option value="sales">Mauzo</option>
+                <option value="purchases">Manunuzi</option>
+                <option value="expenses">Matumizi</option>
               </select>
             </div>
 
             <div>
               <label class="block text-gray-600 font-medium mb-1">
-                Sale Type
+                Aina ya Mauzo
               </label>
               <select
                 value={state.editableFields.saleType}
@@ -351,13 +308,13 @@ const handleButtonClick = $((btn: string) => {
                 class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-300"
               >
                 <option value="cash">Cash</option>
-                <option value="debt">Debt</option>
+                <option value="debt">Deni</option>
               </select>
             </div>
 
             <div>
               <label class="block text-gray-600 font-medium mb-1">
-                Discount (%)
+                Punguzo (%)
               </label>
               <input
                 type="number"
@@ -371,13 +328,13 @@ const handleButtonClick = $((btn: string) => {
             {state.editableFields.typeDetected === "expenses" && (
               <div class="sm:col-span-2">
                 <label class="block text-gray-600 font-medium mb-1">
-                  Description
+                  Maelezo:
                 </label>
                 <textarea
                   value={state.editableFields.description}
                   onInput$={(e) => handleChange(e, "description")}
                   rows={3}
-                  placeholder="e.g. Home use, party order..."
+                  placeholder="e.g. Nauli, chakula, bando, n.k. ..."
                   class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-300"
                 ></textarea>
               </div>
@@ -386,7 +343,7 @@ const handleButtonClick = $((btn: string) => {
             {/* Fetch Customers */}
             {state.editableFields.saleType === "debt" && (
               <div class="sm:col-span-2">
-                <p class="text-gray-600 font-medium mb-2">Select Customer:</p>
+                <p class="text-gray-600 font-medium mb-2">Chagua Mteja:</p>
                 {state.customers.length > 0 ? (
                   <select
                     value={state.customerId || ""} // Bind the selected value to state.customerId
@@ -396,7 +353,7 @@ const handleButtonClick = $((btn: string) => {
                     }}
                     class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-300"
                   >
-                    <option value="">-- Select a customer --</option>
+                    <option value="">-- Chagua mteja --</option>
                     {state.customers.map((customer) => (
                       <option key={customer.id} value={customer.id}>
                         {customer.name} 
@@ -404,7 +361,7 @@ const handleButtonClick = $((btn: string) => {
                     ))}
                   </select>
                 ) : (
-                  <p class="text-gray-500 italic">No customers available.</p>
+                  <p class="text-gray-500 italic">Hakuna mteja aliyepatikana.</p>
                 )}
               </div>
             )}
@@ -427,30 +384,22 @@ const handleButtonClick = $((btn: string) => {
           disabled={state.isSubmitting} // Disable button during submission
           class="mt-4 w-full bg-gray-800 text-white py-2 px-4 rounded hover:bg-gray-400 transition duration-300 ease-in-out"
         >
-          {state.isSubmitting ? `Please wait (${state.submitTimer}s)` : "Submit Transaction"}
+          {state.isSubmitting ? `Tafadhali subiri ` : "Tuma muamala"}
         </button>
         </div>
       )}
 
-{/* Modal Popup */}
-{state.modal.isOpen && (
-  <div class="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50 z-50">
-    <div class="bg-white rounded-xl shadow-lg p-6 max-w-sm w-full border border-gray-300">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class={`text-lg font-semibold ${state.modal.isSuccess ? 'text-green-600' : 'text-red-600'}`}>
-          {state.modal.isSuccess ? '✅ Success' : '❌ Error'}
-        </h2>
-        <button
-          onClick$={() => (state.modal.isOpen = false)}
-          class="text-gray-500 hover:text-red-600 text-xl"
-        >
-          ✖
-        </button>
-      </div>
-      <p class="text-gray-700">{state.modal.message}</p>
-    </div>
-  </div>
-)}
+      {/* Modal Popup */}
+      {state.modal.isOpen && (
+        <Toast
+          isOpen={state.modal.isOpen}
+          type={state.modal.isSuccess}
+          message={state.modal.message}
+          onClose$={$(() => {
+            state.modal.isOpen = false;
+        })}
+        />
+      )}
 
     </div>
   );

@@ -1,11 +1,11 @@
 import { component$, useSignal, useTask$, $, useContext, useStore } from '@builder.io/qwik';
-import { Translate } from './Language';
 import { RefetchContext } from './context/refreshContext';
 import { CrudService } from '~/routes/api/base/oop';
 import type { Supplier } from '~/routes/api/base/typeSafe';
+import { Toast } from './ui/Toast';
 
 
-export const SuppCrudComponent =  component$((props: {lang: string }) => {
+export const SuppCrudComponent =  component$(() => {
   const supplier = useSignal<Supplier[]>([]);
   const total = useSignal(0);
   const search = useSignal('');
@@ -29,12 +29,11 @@ export const SuppCrudComponent =  component$((props: {lang: string }) => {
     const result = await fetchSupplierApi.get();
 
     if (!result.success) {
-      // give popup
-      modal.isOpen = true;
-      modal.isSuccess = false,
-      modal.message = result.message || "Hitilafu wakati wa kutuma ombi lako";
-      return;
+    // reset loading
+    isLoading.value = false;
+    return;
     }
+    
     supplier.value = result.data;
     // reset loading
     isLoading.value = false;
@@ -84,12 +83,12 @@ export const SuppCrudComponent =  component$((props: {lang: string }) => {
   return (
     <div class="p-4 max-w-5xl mx-auto">
 
-      <h1 class="text-xl font-bold mb-4 text-center"> <Translate lang={props.lang} keys={['suppliers']} /> </h1>
+      <h1 class="text-xl font-bold mb-4 text-center"> Wasambazaji </h1>
 
       <input
         class="w-full mb-4 px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
         type="text"
-        placeholder="🔍 Tafuta kwa jina la muuzaji ..."
+        placeholder="🔍 Tafuta kwa jina la msambazaji ..."
         bind:value={search}
       />
 
@@ -98,9 +97,9 @@ export const SuppCrudComponent =  component$((props: {lang: string }) => {
         <table class="w-full text-sm text-left">
           <thead class="bg-gray-100 font-semibold text-gray-600">
             <tr>
-              <th class="p-3 border-b border-gray-200"><Translate lang={props.lang} keys={['name']} /></th>
-              <th class="p-3 border-b border-gray-200"><Translate lang={props.lang} keys={['contact']} /></th>
-              <th class="p-3 border-b border-gray-200"><Translate lang={props.lang} keys={['action']} /></th>
+              <th class="p-3 border-b border-gray-200">Jina:</th>
+              <th class="p-3 border-b border-gray-200">Mawasiliano:</th>
+              <th class="p-3 border-b border-gray-200">Kitendo:</th>
             </tr>
           </thead>
           <tbody>
@@ -113,7 +112,7 @@ export const SuppCrudComponent =  component$((props: {lang: string }) => {
             ) : supplier.value.length === 0 ? (
               <tr>
                 <td colSpan={7} class="p-4 text-center text-gray-500">
-                Hakuna muuzaji yoyote, msajili kwanza ....
+                Hakuna msambazaji yoyote, msajili kwanza ....
                 </td>
               </tr>
               )
@@ -149,7 +148,7 @@ export const SuppCrudComponent =  component$((props: {lang: string }) => {
         {isLoading.value ? (
           <div class="text-center text-gray-500 p-4">Loading...</div>
         ) : supplier.value.length === 0 ? (
-          <div class="text-center text-gray-500 p-4">Hakuna muuzaji yeyote, msajili kwanza ...</div>
+          <div class="text-center text-gray-500 p-4">Hakuna msambazaji yeyote, msajili kwanza ...</div>
         ) : (
           supplier.value.map((supplier) => (
             <div key={supplier.id} class="border rounded-lg p-3 bg-white shadow-sm">
@@ -202,7 +201,7 @@ export const SuppCrudComponent =  component$((props: {lang: string }) => {
       <h2 class="text-lg font-semibold">Edit Muuzaji</h2>
 
       <div class="mt-4">
-        <label class="block text-sm"><Translate lang={props.lang} keys={['name']} /></label>
+        <label class="block text-sm">Jina:</label>
         <input
           type="text"
           class="w-full p-2 border border-gray-300 rounded"
@@ -211,7 +210,7 @@ export const SuppCrudComponent =  component$((props: {lang: string }) => {
         />
       </div>
       <div class="mt-4">
-      <label class="block text-sm"><Translate lang={props.lang} keys={['contact']} /></label>
+      <label class="block text-sm">Mawasiliano:</label>
       <input
           type="number"
           class="w-full p-2 border border-gray-300 rounded"
@@ -229,7 +228,9 @@ export const SuppCrudComponent =  component$((props: {lang: string }) => {
           class="px-4 py-2 bg-gray-700 text-white rounded"
           onClick$={async () => {
             const editSupplierApi = new CrudService<Supplier>("suppliers");
-            const result = await editSupplierApi.update(selectedSupplier.value!.id, selectedSupplier.value!);
+            const selectedSuppId = selectedSupplier.value?.id
+            if (!selectedSuppId) return;
+            const result = await editSupplierApi.updateById(selectedSupplier.value!, selectedSuppId);
 
             if (!result.success) {
               modal.isOpen = true,
@@ -261,17 +262,17 @@ export const SuppCrudComponent =  component$((props: {lang: string }) => {
   </div>
 )}
 
-{/* Modal Popup */}
-{modal.isOpen && (
-<div class="fixed inset-0 flex items-center justify-center bg-opacity-50 bg-neutral-500 z-50">
-<div class="bg-white p-6 rounded shadow-lg text-center">
-    <p class={modal.isSuccess ? 'text-green-600' : 'text-red-600'}>{modal.message}</p>
-    <button class="mt-4 bg-blue-500 text-white px-4 py-2 rounded" onClick$={() => (modal.isOpen = false)}>
-    Ok
-    </button>
-</div>
-</div>
-)}
+    {/* Modal Popup */}
+    {modal.isOpen && (
+      <Toast
+        isOpen={modal.isOpen}
+        type={modal.isSuccess}
+        message={modal.message}
+        onClose$={$(() => {
+          modal.isOpen = false;
+      })}
+      />
+    )}
 
 
 {isDeleting.value && (

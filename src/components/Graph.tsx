@@ -1,6 +1,5 @@
 import { component$, useVisibleTask$ } from "@builder.io/qwik";
 import Chart from "chart.js/auto";
-import { fetchWithLang } from "~/routes/function/fetchLang";
 
 type SalesData = {
   day: string;
@@ -8,12 +7,7 @@ type SalesData = {
 };
 
 
-export const Graph = component$((props: {lang: string, data: SalesData[] }) => {
-  useVisibleTask$(async () => {
-    await fetchWithLang("http://localhost:3000/analytics", {
-      credentials: 'include'
-    });
-  });
+export const Graph = component$((props: { data: SalesData[] }) => {
 
   console.log("Data: ", props.data)
 

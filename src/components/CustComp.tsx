@@ -1,7 +1,7 @@
-import { component$, useSignal, useTask$, $, useContext } from '@builder.io/qwik';
-import { fetchWithLang } from '~/routes/function/fetchLang';
-import { Translate } from './Language';
+import { component$, useSignal, useTask$, $, useContext, useStore } from '@builder.io/qwik';
 import { RefetchContext } from './context/refreshContext';
+import { CrudService } from '~/routes/api/base/oop';
+import { Toast } from './ui/Toast';
 
 interface Customer {
   id: string;
@@ -10,7 +10,7 @@ interface Customer {
   createdAt: string;
 }
 
-export const CustomersCrudComponent =  component$((props: {lang: string }) => {
+export const CustomersCrudComponent =  component$(() => {
   const customer = useSignal<Customer[]>([]);
   const total = useSignal(0);
   const search = useSignal('');
@@ -21,39 +21,24 @@ export const CustomersCrudComponent =  component$((props: {lang: string }) => {
   const isEditing = useSignal(false);
   const isDeleting = useSignal(false);
 
+  const store = useStore({
+    modal: {
+      isOpen: false as boolean,
+      isSuccess: false  as boolean,
+      message: '' as string
+    }
+  })
+
 
   const fetchCustomers = $(async () => {
     isLoading.value = true;
-    try {
-      const res = await fetchWithLang(
-        `http://localhost:3000/customers?search=${encodeURIComponent(search.value)}&page=${currentPage.value}&limit=${perPage}`,{
-          method: 'GET',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept-Language': 'sw', // Adjust as necessary
-          },
-        }
-      );
+    const newFetchApi = new CrudService<Customer>(`customers?search=${encodeURIComponent(search.value)}&page=${currentPage.value}&limit=${perPage}`);
+    const fetchData = await newFetchApi.get();
+    isLoading.value = false;
+    if(!fetchData.success) return; // dont give popup if no customer found
 
-      if (!res.ok) {
-        const text = await res.text(); // fallback for non-JSON errors
-        throw new Error(`Imeshindwa kujibu kuhusu wateja: ${text}`);
-      }
-
-
-      const json = await res.json();
-      if (!json.success) {
-        throw new Error(json.message || 'Imeshindwa kuleta wateja kutoka kwenye seva');
-      }
-      customer.value = json.data;
-
-      total.value = json.total;
-    } catch (err) {
-      console.error('Imeshindwa kuleta mteja:', err);
-    } finally {
-      isLoading.value = false;
-    }
+    customer.value = fetchData.data;
+    total.value = fetchData.total;
   });
 
   const { customerRefetch } = useContext(RefetchContext);
@@ -75,17 +60,15 @@ export const CustomersCrudComponent =  component$((props: {lang: string }) => {
   
   const deleteCustomers = $(async (customerId: string) => {
     try {
-      const res = await fetchWithLang(`http://localhost:3000/${customerId}`, {
-        method: 'DELETE',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-  
-      if (!res.ok) {
-        const text = await res.text(); // Fallback for non-JSON errors
-        throw new Error(`Imeshindwa kufuta mteja: ${text}`);
+      const delAPI = new CrudService(`${customerId}`);
+      const isDeleted = await delAPI.deleteAll();
+      if (!isDeleted.success) {
+        store.modal = {
+          isOpen: true,
+          isSuccess: false,
+          message: isDeleted.message || "Imeshindwa kufuta taarifa"
+        }
+        return;
       }
   
       // If deletion is successful, remove the customer from the list
@@ -101,9 +84,9 @@ export const CustomersCrudComponent =  component$((props: {lang: string }) => {
   return (
     <div class="p-4 max-w-5xl mx-auto">
       <h1 class="text-xl font-bold text-gray-700 mt-6 mb-2 border-b-2 pb-2">
-        <Translate lang={props.lang} keys={['step_2']} /> 
+        Hatua ya 2:
       </h1>
-      <h1 class="text-xl font-bold mb-4 text-center"> <Translate lang={props.lang} keys={['customers']} /> </h1>
+      <h1 class="text-xl font-bold mb-4 text-center"> Wateja </h1>
 
       <input
         class="w-full mb-4 px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
@@ -117,9 +100,9 @@ export const CustomersCrudComponent =  component$((props: {lang: string }) => {
         <table class="w-full text-sm text-left">
           <thead class="bg-gray-100 font-semibold text-gray-600">
             <tr>
-              <th class="p-3 border-b border-gray-200"><Translate lang={props.lang} keys={['name']} /></th>
-              <th class="p-3 border-b border-gray-200"><Translate lang={props.lang} keys={['contact']} /></th>
-              <th class="p-3 border-b border-gray-200"><Translate lang={props.lang} keys={['action']} /></th>
+              <th class="p-3 border-b border-gray-200">Jina: </th>
+              <th class="p-3 border-b border-gray-200">Mawasiliano: </th>
+              <th class="p-3 border-b border-gray-200">Kitendo: </th>
             </tr>
           </thead>
           <tbody>
@@ -152,7 +135,7 @@ export const CustomersCrudComponent =  component$((props: {lang: string }) => {
                         isDeleting.value = true;
                         }}
                     >
-                        Delete
+                        Futa
                     </button>
                     </div>
 
@@ -185,7 +168,7 @@ export const CustomersCrudComponent =  component$((props: {lang: string }) => {
                     isDeleting.value = true;
                   }}
                 >
-                  Delete
+                  Futa
                 </button>
               </div>
             </div>
@@ -201,27 +184,27 @@ export const CustomersCrudComponent =  component$((props: {lang: string }) => {
         disabled={currentPage.value === 1}
         class="px-4 py-2 bg-gray-200 text-sm rounded disabled:opacity-50"
         >
-          Previous
+          Nyuma
         </button>
         <span class="text-sm">
-          Page {currentPage.value} of {totalPages()}
+          Kurasa {currentPage.value} kati ya {totalPages()}
         </span>
         <button
           onClick$={() => currentPage.value++}
           disabled={currentPage.value >= totalPages()}
           class="px-4 py-2 bg-gray-200 text-sm rounded disabled:opacity-50"
         >
-          Next
+          Mbele
         </button>
       </div>
 
       {isEditing.value && selectedCustomer.value && (
   <div class="fixed inset-0 flex items-center justify-center z-10 bg-gray-600 bg-opacity-50">
     <div class="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
-      <h2 class="text-lg font-semibold">Edit Customers</h2>
+      <h2 class="text-lg font-semibold">Edit Mteja</h2>
 
       <div class="mt-4">
-        <label class="block text-sm"><Translate lang={props.lang} keys={['name']} /></label>
+        <label class="block text-sm">Jina:</label>
         <input
           type="text"
           class="w-full p-2 border border-gray-300 rounded"
@@ -230,7 +213,7 @@ export const CustomersCrudComponent =  component$((props: {lang: string }) => {
         />
       </div>
       <div class="mt-4">
-      <label class="block text-sm"><Translate lang={props.lang} keys={['contact']} /></label>
+      <label class="block text-sm">Mawasiliano: </label>
       <input
           type="number"
           class="w-full p-2 border border-gray-300 rounded"
@@ -247,35 +230,37 @@ export const CustomersCrudComponent =  component$((props: {lang: string }) => {
         <button
           class="px-4 py-2 bg-gray-700 text-white rounded"
           onClick$={async () => {
-            try {
-              const res = await fetchWithLang(`http://localhost:3000/customers/${selectedCustomer.value!.id}`, {
-                method: 'PUT',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Accept-Language': 'sw', // Adjust as necessary
-                },
-                body: JSON.stringify(selectedCustomer.value),
-                credentials: 'include',
-              });
-
-              customerRefetch.value = true;
-              if (!res.ok) {
-                const text = await res.text();
-                throw new Error(`Imeshindwa ku-update mteja: ${text}`);
+            const newPut = new CrudService<Customer>(`customers/${selectedCustomer.value!.id}`);
+            if(selectedCustomer.value === null) {
+              store.modal = {
+                isOpen: true,
+                isSuccess: true,
+                message: "Tafadhali chagua mteja"
               }
-              const updatedCustomer = await res.json();
-              // Update Customer in the local list
-              const index = customer.value.findIndex(p => p.id === updatedCustomer.id);
-              if (index > -1) {
-                customer.value[index] = updatedCustomer;
-              }
-              isEditing.value = false;
-            } catch (err) {
-              console.error('Imeshindwa ku-update mteja:', err);
+              return;
             }
+            const putRes = await newPut.update(selectedCustomer.value);
+            customerRefetch.value = true;
+
+            if (!putRes.success){
+              store.modal = {
+                isSuccess: false,
+                isOpen: true,
+                message: putRes.message || "Imeshindwa ku-update taarifa"
+              }
+              return;
+            }
+      
+
+            const index = customer.value.findIndex(p => p.id === putRes.data.id);
+            if (index > -1) {
+              customer.value[index] = putRes.data;
+            }
+            isEditing.value = false;
+
           }}
         >
-          Save
+          Hifadhi
         </button>
         <button
           class="px-4 py-2 bg-gray-300 text-black rounded"
@@ -284,7 +269,7 @@ export const CustomersCrudComponent =  component$((props: {lang: string }) => {
             selectedCustomer.value = null;
           }}
         >
-          Cancel
+          Ghairi
         </button>
       </div>
     </div>
@@ -302,7 +287,7 @@ export const CustomersCrudComponent =  component$((props: {lang: string }) => {
           class="px-4 py-2 bg-red-500 text-white rounded"
           onClick$={() => deleteCustomers(selectedCustomer.value!.id)}
         >
-          Delete
+          Futa
         </button>
         <button
           class="px-4 py-2 bg-gray-300 text-black rounded"
@@ -311,14 +296,24 @@ export const CustomersCrudComponent =  component$((props: {lang: string }) => {
             selectedCustomer.value = null;
           }}
         >
-          Cancel
+          Ghairi
         </button>
       </div>
     </div>
   </div>
 )}
 
-
+        {/* Modal Popup */}
+        {store.modal.isOpen && (
+          <Toast
+          isOpen={store.modal.isOpen}
+          type={store.modal.isSuccess}
+          message={store.modal.message}
+          onClose$={$(() => {
+            store.modal.isOpen = false;
+          })}
+          />
+      )}
     </div>
   );
 });

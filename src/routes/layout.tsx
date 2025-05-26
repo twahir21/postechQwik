@@ -1,8 +1,6 @@
-import { component$, Slot, useContextProvider, useSignal, useStore } from "@builder.io/qwik";
-import type { RequestHandler } from "@builder.io/qwik-city";
+import { component$, Slot, useContextProvider, useSignal } from "@builder.io/qwik";
+import { routeLoader$, type RequestHandler } from "@builder.io/qwik-city";
 import { RefetchContext } from "~/components/context/refreshContext";
-import { globalStoreContext } from "~/components/context/store/globalStore";
-import type { globalStoreTypes } from "~/components/context/store/globalStore";
 import { CrudService } from "./api/base/oop";
 
 
@@ -50,7 +48,8 @@ export const onGet: RequestHandler = async ({ url, cookie, request, redirect, er
   rateLimitMap.set(ip, record);
 
   // Auth logic
-  const isPrivate = url.pathname.startsWith("/private") || url.pathname.startsWith("/api/translate");
+  const isPrivate = url.pathname.startsWith("/private");
+  
   if (isPrivate) {
     const token = cookie.get('auth_token')?.value;
     const tokenPayload = {token}
@@ -63,6 +62,12 @@ export const onGet: RequestHandler = async ({ url, cookie, request, redirect, er
 
 };
 
+export const useAuthLoader = routeLoader$(async ({ cookie }) => {
+  const username = cookie.get("username")?.value;
+
+  return { username }
+});
+
 export default component$(() => {
   const saleRefetch = useSignal(false);
   const productRefetch = useSignal(false);
@@ -70,6 +75,7 @@ export default component$(() => {
   const qrCodeRefetch =  useSignal(false);
   const supplierRefetch = useSignal(false);
   const categoryRefetch = useSignal(false);
+  const refetchAnalytics = useSignal(false);
 
   // Provide all signals as a grouped context
   useContextProvider(RefetchContext, {
@@ -79,17 +85,8 @@ export default component$(() => {
     qrCodeRefetch,
     supplierRefetch,
     categoryRefetch,
+    refetchAnalytics
   });
-
-
-  // globalStore
-const globalStore = useStore<globalStoreTypes>({
-  profitPerProduct: [] // This is an array, matching the interface
-});
-
-// Provide the store using the context provider
-useContextProvider(globalStoreContext, globalStore);
-
 
   return <Slot />;
 });

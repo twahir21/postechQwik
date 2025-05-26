@@ -1,10 +1,11 @@
 import { component$, useStore, useResource$, $, useContext } from '@builder.io/qwik';
-import { fetchWithLang } from '~/routes/function/fetchLang';
 import { SupplierComponent } from './Supplier';
-import { Translate } from './Language';
 import { QrPdf } from './QRPdf';
 import { fetchCategories, fetchSuppliers, globalStore } from '~/routes/function/helpers';
 import { RefetchContext } from './context/refreshContext';
+import { CrudService } from '~/routes/api/base/oop';
+import { swahiliLabels, swahiliPlaceholders } from '~/routes/api/base/forms';
+import { Toast } from './ui/Toast';
 
 interface Product {
   name: string;
@@ -39,7 +40,7 @@ interface Store {
   isLoading?: boolean
 }
 
-export const ProductComponent = component$((props: {lang: string}) => {
+export const ProductComponent = component$(() => {
   const store = useStore<Store>({
     category: [],
     supplier: [],
@@ -79,8 +80,11 @@ export const ProductComponent = component$((props: {lang: string}) => {
       return globalStore.categoriesData
     } catch (error) {
       store.category = [];
-      console.error("Error: ", error);
-      store.modal = { isOpen: true, message: 'Tatizo limejitokeza', isSuccess: false };
+      store.modal = { 
+        isOpen: true, 
+        message: error instanceof Error ? error.message : 'Tatizo limejitokeza', 
+        isSuccess: false 
+      };
       return []; // Return empty array in case of an error
     }
   });
@@ -97,9 +101,12 @@ export const ProductComponent = component$((props: {lang: string}) => {
         return globalStore.supplierData;
       } catch (error) {
         store.supplier = [];
-        console.error("Error: ", error);
-        store.modal = { isOpen: true, message: 'Tatizo limejitokeza', isSuccess: false };
-        return []; // Return empty array in case of an error
+        store.modal = { 
+          isOpen: true, 
+          message: error instanceof Error ? error.message : 'Tatizo limejitokeza', 
+          isSuccess: false 
+        };
+      return []; // Return empty array in case of an error
       }
     });  
 
@@ -157,21 +164,25 @@ export const ProductComponent = component$((props: {lang: string}) => {
         categoryId: store.category[0]?.id, // Use ID instead of full object
         supplierId: store.supplier[0]?.id,
       };
-    
       // Send data to backend
-
-      const response = await fetchWithLang('http://localhost:3000/products', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(productPayload),
-        credentials: 'include',
-      });
+      interface prdPayload {   
+        id?: string; 
+        name: string;
+        priceSold: number;
+        stock: number;
+        minStock: number;
+        priceBought: number;
+        unit: string;
+        categoryId: string;
+        supplierId: string;
+      }
+      const newCrudPrd = new CrudService<prdPayload>("products");
+      const resData = await newCrudPrd.create(productPayload);
 
       qrCodeRefetch.value = true;
-      const resData = await response.json();
   
       // Check response
-      if (!response.ok || !resData.success) { 
+      if (!resData.success) { 
         store.modal = { isOpen: true, message: resData.message || 'Tatizo limejitokeza', isSuccess: false };
         return;
       }
@@ -179,9 +190,12 @@ export const ProductComponent = component$((props: {lang: string}) => {
       store.modal = { isOpen: true, message: resData.message || 'Umefanikiwa', isSuccess: true };
   
     } catch (error) {
-      console.error('Error submitting form:', error);
-      store.modal = { isOpen: true, message: 'Tatizo limejitokeza', isSuccess: false };
-    } finally {
+      store.modal = { 
+        isOpen: true, 
+        message: error instanceof Error ? error.message : 'Tatizo limejitokeza', 
+        isSuccess: false 
+      };
+      } finally {
       store.isLoading = false; // end loading ...
     }
   });
@@ -189,16 +203,16 @@ export const ProductComponent = component$((props: {lang: string}) => {
   return (
     <>
       <h1 class="text-xl font-bold text-gray-700 mt-6 mb-2 border-b-2 pb-2">
-        <Translate lang={props.lang} keys={['step_1']} /> 
+        Hatua ya 1:
       </h1>
-      <SupplierComponent lang={props.lang}/>
+      <SupplierComponent />
       <h1 class="text-xl font-bold text-gray-700 mt-6 mb-2 border-b-2 pb-2">
-        <Translate lang={props.lang} keys={['step_2']} /> 
+        Hatua ya 2:
       </h1>
 
       <div class="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-lg mt-5 border-2 border-gray-600">
         <h2 class="text-2xl font-bold mb-4">
-          <Translate lang={props.lang} keys={['addPrd']} />
+          Ongeza Bidhaa:
         </h2>
 
         <div class="grid grid-cols-2 gap-4">
@@ -207,7 +221,7 @@ export const ProductComponent = component$((props: {lang: string}) => {
             class="border p-2 rounded w-full"
             onChange$={(e) => handleInputChange('category', (e.target as HTMLSelectElement).value)}
           >
-            <option value="">Select Category</option>
+            <option value="">-- Chagua Kategoria --</option>
             {store.category.length > 0 ? (
               store.category.map((category) => (
                 <option key={category.id} value={category.id}>
@@ -215,7 +229,7 @@ export const ProductComponent = component$((props: {lang: string}) => {
                 </option>
               ))
             ) : (
-              <option disabled>No Categories Found</option>
+              <option disabled>Hakuna Kategoria</option>
             )}
           </select>
 
@@ -224,7 +238,7 @@ export const ProductComponent = component$((props: {lang: string}) => {
             class="border p-2 rounded w-full"
             onChange$={(e) => handleInputChange('supplier', (e.target as HTMLSelectElement).value)}
           >
-            <option value="">Select Supplier</option>
+            <option value="">-- Chagua Msambazaji --</option>
             {store.supplier.length > 0 ? (
               store.supplier.map((supplier) => (
                 <option key={supplier.id} value={supplier.id}>
@@ -232,31 +246,45 @@ export const ProductComponent = component$((props: {lang: string}) => {
                 </option>
               ))
             ) : (
-              <option disabled>No Supplier Found</option>
+              <option disabled>Hakuna Msambazaji</option>
             )}
           </select>
 
-          {/* Product Inputs */}
-          {Object.keys(store.product).map((key) => (
-            <input
-              key={key}
-              class="border p-2 rounded w-full"
-              placeholder={`Product ${key.charAt(0).toUpperCase() + key.slice(1)}`}
-              type={key === 'priceSold' || key === 'stock' || key === 'minStock' ? 'number' : 'text'}
-              onInput$={(e) => handleNestedInputChange('product', key, (e.target as HTMLInputElement).value)}
-            />
-          ))}
 
-          {/* Purchases Inputs */}
-          {Object.keys(store.purchases).map((key) => (
+        {/* Product Inputs */}
+        {Object.keys(store.product).map((key) => (
+          <div class="mb-1" key={key}>
+            <label class="block mb-1 font-semibold text-sm text-gray-600">
+              {swahiliLabels.product[key as keyof typeof swahiliLabels.product]}
+            </label>
             <input
-              key={key}
               class="border p-2 rounded w-full"
-              placeholder={`Purchases ${key.charAt(0).toUpperCase() + key.slice(1)}`}
-              type={key === 'priceBought' ? 'number' : 'text'}
-              onInput$={(e) => handleNestedInputChange('purchases', key, (e.target as HTMLInputElement).value)}
+              placeholder={swahiliPlaceholders.product[key as keyof typeof swahiliPlaceholders.product]}
+              type={key === 'priceSold' || key === 'stock' || key === 'minStock' ? 'number' : 'text'}
+              onInput$={(e) =>
+                handleNestedInputChange('product', key, (e.target as HTMLInputElement).value)
+              }
             />
-          ))}
+          </div>
+        ))}
+
+        {/* Purchases Inputs */}
+        {Object.keys(store.purchases).map((key) => (
+          <div class="mb-1" key={key}>
+            <label class="block mb-1 font-semibold text-sm text-gray-600">
+              {swahiliLabels.purchases[key as keyof typeof swahiliLabels.purchases]}
+            </label>
+            <input
+              class="border p-2 rounded w-full"
+              placeholder={swahiliPlaceholders.purchases[key as keyof typeof swahiliPlaceholders.purchases]}
+              type={key === 'priceBought' ? 'number' : 'text'}
+              onInput$={(e) =>
+                handleNestedInputChange('purchases', key, (e.target as HTMLInputElement).value)
+              }
+            />
+          </div>
+        ))}
+
         </div>
 
         {/* Submit Button */}
@@ -275,18 +303,18 @@ export const ProductComponent = component$((props: {lang: string}) => {
         </button>
       </div>
         
-      <QrPdf lang={props.lang}/>
+      <QrPdf />
       
         {/* Modal Popup */}
         {store.modal.isOpen && (
-          <div class="fixed inset-0 flex items-center justify-center bg-opacity-50 bg-neutral-500 z-50">
-            <div class="bg-white p-6 rounded shadow-lg text-center">
-              <p class={store.modal.isSuccess ? 'text-green-600' : 'text-red-600'}>{store.modal.message}</p>
-              <button class="mt-4 bg-blue-500 text-white px-4 py-2 rounded" onClick$={() => (store.modal.isOpen = false)}>
-                Ok
-              </button>
-            </div>
-          </div>
+          <Toast
+            isOpen={store.modal.isOpen}
+            type={store.modal.isSuccess}
+            message={store.modal.message}
+            onClose$={$(() => {
+              store.modal.isOpen = false;
+            })}
+          />
         )}
     </>
   );

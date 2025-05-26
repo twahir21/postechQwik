@@ -1,6 +1,4 @@
 import { component$, useSignal, useTask$, $ } from '@builder.io/qwik';
-import { fetchWithLang } from '~/routes/function/fetchLang';
-import { Translate } from './Language';
 
 interface Product {
   id: string;
@@ -19,7 +17,7 @@ interface Product {
   isQRCode: boolean;
 }
 
-export const CrudPrdComponent =  component$((props: {lang: string}) => {
+export const CrudPrdComponent =  component$(() => {
   const products = useSignal<Product[]>([]);
   const total = useSignal(0);
   const search = useSignal('');
@@ -34,7 +32,7 @@ export const CrudPrdComponent =  component$((props: {lang: string}) => {
   const fetchProducts = $(async () => {
     isLoading.value = true;
     try {
-      const res = await fetchWithLang(
+      const res = await fetch(
         `http://localhost:3000/products?search=${encodeURIComponent(search.value)}&page=${currentPage.value}&limit=${perPage}`,{
           method: 'GET',
           credentials: 'include',
@@ -80,7 +78,7 @@ export const CrudPrdComponent =  component$((props: {lang: string}) => {
   
   const deleteProduct = $(async (productId: string) => {
     try {
-      const res = await fetchWithLang(`http://localhost:3000/products/${productId}`, {
+      const res = await fetch(`http://localhost:3000/products/${productId}`, {
         method: 'DELETE',
         credentials: 'include',
         headers: {
@@ -105,7 +103,7 @@ export const CrudPrdComponent =  component$((props: {lang: string}) => {
 
   return (
     <div class="p-4 max-w-5xl mx-auto">
-      <h1 class="text-xl font-bold mb-4 text-center"><Translate lang={props.lang} keys={['products']} /></h1>
+      <h1 class="text-xl font-bold mb-4 text-center">Bidhaa:</h1>
 
       <input
         class="w-full mb-4 px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
@@ -119,13 +117,13 @@ export const CrudPrdComponent =  component$((props: {lang: string}) => {
         <table class="w-full text-sm text-left">
           <thead class="bg-gray-100 font-semibold text-gray-600">
             <tr>
-              <th class="p-3 border-b border-gray-200"><Translate lang={props.lang} keys={['prdName']} /></th>
-              <th class="p-3 border-b border-gray-200"><Translate lang={props.lang} keys={['priceSold']} /></th>
-              <th class="p-3 border-b border-gray-200"><Translate lang={props.lang} keys={['priceBought']} /></th>
-              <th class="p-3 border-b border-gray-200"><Translate lang={props.lang} keys={['stock']} /></th>
-              <th class="p-3 border-b border-gray-200"><Translate lang={props.lang} keys={['unit']} /></th>
-              <th class="p-3 border-b border-gray-200"><Translate lang={props.lang} keys={['status']} /></th>
-              <th class="p-3 border-b border-gray-200"><Translate lang={props.lang} keys={['action']} /></th>
+              <th class="p-3 border-b border-gray-200">Jina la Bidhaa</th>
+              <th class="p-3 border-b border-gray-200">Bei ya kuuza</th>
+              <th class="p-3 border-b border-gray-200">Bei ya kununua</th>
+              <th class="p-3 border-b border-gray-200">Hisa</th>
+              <th class="p-3 border-b border-gray-200">Kiwango</th>
+              <th class="p-3 border-b border-gray-200">Hali</th>
+              <th class="p-3 border-b border-gray-200">Kitendo</th>
             </tr>
           </thead>
           <tbody>
@@ -293,7 +291,7 @@ export const CrudPrdComponent =  component$((props: {lang: string}) => {
       </div>
 
       <div class="mt-4">
-        <label class="block text-sm"><Translate lang={props.lang} keys={['stock']} /></label>
+        <label class="block text-sm">Hisa:</label>
         <input
           type="number"
           class="w-full p-2 border border-gray-300 rounded"
@@ -305,7 +303,7 @@ export const CrudPrdComponent =  component$((props: {lang: string}) => {
         />
       </div>
       <div class="mt-4">
-        <label class="block text-sm"><Translate lang={props.lang} keys={['unit']} /></label>
+        <label class="block text-sm">Kiwango:</label>
         <input
           type="text"
           class="w-full p-2 border border-gray-300 rounded"
@@ -318,7 +316,7 @@ export const CrudPrdComponent =  component$((props: {lang: string}) => {
           class="px-4 py-2 bg-gray-700 text-white rounded"
           onClick$={async () => {
             try {
-              const res = await fetchWithLang(`http://localhost:3000/products/${selectedProduct.value!.id}`, {
+              const res = await fetch(`http://localhost:3000/products/${selectedProduct.value!.id}`, {
                 method: 'PUT',
                 headers: {
                   'Content-Type': 'application/json',

@@ -1,7 +1,7 @@
 import { $, component$, useSignal, useStore, useVisibleTask$ } from "@builder.io/qwik";
 import { Link, type DocumentHead } from "@builder.io/qwik-city";
 import type { ContactTypes } from "./api/base/typeSafe";
-import { contactApi, warmUpApi } from "./api/base/api";
+import { contactApi } from "./api/base/api";
 import { Typewriter } from "~/components/TypeWriter";
 import { Toast } from "~/components/ui/Toast";
 import { WhatsApp } from "~/components/WhatsApp";
@@ -164,24 +164,13 @@ export default component$(() => {
       return () => document.removeEventListener('click', handler);
     });
 
-      // WARM UP THE SERVER TO REMOVE COLD START
-      useVisibleTask$(async () => {
-        const result = await warmUpApi.get();
-        if (!result.success){
-          console.log("Failed to warm: ", result)
-          return;
-        }
-        console.log("Warm up: ", result)
-        return;
-      });
-
     return <>
     <div class="bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100">
       <WhatsApp />
 
         {/* HEADER  */}
         <header class="fixed top-0 left-0 w-full bg-white dark:bg-gray-700 shadow-md z-50 transition-colors duration-300">
-        <nav class="max-w-6xl mx-auto flex justify-between items-center p-4">
+        <nav class="w-full max-w-6xl mx-auto flex justify-between items-center p-4 m-0">
           <a href="/" class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">myPosTech</a>
 
           <ul class="hidden md:flex space-x-6">
@@ -262,20 +251,22 @@ export default component$(() => {
 
     {/* Right side - image */}
     <div class="w-full md:w-1/2">
-      {/* Small screens: hero.png */}
+      {/* Small screens: hero.webp */}
       <img
-        src="/hero.png"
+        src="/hero.webp"
         alt="myPosTech mobile hero"
-        class="w-ful max-w-sm mx-auto drop-shadow-xl rounded-xl block md:hidden"
-        loading="lazy"
+        class="w-full aspect-auto max-w-sm mx-auto drop-shadow-xl rounded-xl block md:hidden"
+        loading="eager"
+        decoding="async"
       />
       
-      {/* Desktop: hero-big.png */}
+      {/* Desktop: hero-big.webp */}
       <img
         src="/hero-big.webp"
         alt="myPosTech desktop hero"
-        class="w-full max-w-sm mx-auto drop-shadow-xl rounded-xl hidden md:block"
-        loading="lazy"
+        class="w-full max-w-sm aspect-auto mx-auto drop-shadow-xl rounded-xl hidden md:block"
+        loading="eager"
+        decoding="async"
       />
     </div>
 
@@ -285,14 +276,15 @@ export default component$(() => {
         <section id="about" class="flex items-center min-h-screen px-6 mx-auto bg-gray-200 dark:bg-gray-600">
           <div class="hidden md:block w-1/2">
             <img
-              src="/gpt.png"
+              src="/about.webp"
               alt="About myPosTech Visual"
-              class="w-full max-w-sm mx-auto drop-shadow-xl rounded-full"
+              class="w-full aspect-auto max-w-sm mx-auto drop-shadow-xl rounded-full"
               loading="lazy"
+              decoding="async"
             />
           </div>
 
-          <div class="w-full md:w-1/2 ml-auto text-right">
+          <div class="w-full md:w-1/2 ml-auto">
               <h2 class="text-2xl sm:text-3xl md:text-3xl font-bold mb-4">Kuhusu myPosTech</h2>
               <p class="text-sm sm:text-base md:text-base text-gray-600 dark:text-gray-300">
                 myPosTech umeundwa mahsusi kutatua changamoto halisi za wafanyabiashara wakubwa na wadogo.
@@ -452,7 +444,7 @@ export const head: DocumentHead = {
                     "@type": "Organization",
                     "name": "myPosTech",
                     "url": "https://mypostech.store",
-                    "logo": "https://mypostech.store/newLogo.png"
+                    "logo": "https://mypostech.store/newLogo.webp"
                   },
                   {
                     "@type": "LocalBusiness",

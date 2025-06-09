@@ -8,6 +8,7 @@ import {
 import { useLocation } from "@builder.io/qwik-city";
 import { CrudService } from "../api/base/oop";
 import { Toast } from "~/components/ui/Toast";
+import { formatDateTime, formatMoney } from "../function/helpers";
 
 export default component$(() => {
   const location = useLocation();
@@ -15,9 +16,10 @@ export default component$(() => {
   // Define state
   const state = useStore({
     query: {} as Record<string, string>,
+    rawParams: {} as Record<string, string>,
     isLoading: true,
     productId: "",
-    generatedAt: "",
+    // generatedAt: "",
     editableFields: {
       quantity: "1",
       saleType: "cash",
@@ -53,19 +55,45 @@ export default component$(() => {
     const urlParams = new URLSearchParams(location.url.search);
     const params: Record<string, string> = {};
 
+    const uiParams: Record<string, string> = {};
+
     urlParams.forEach((value, key) => {
+      // Assign directly to state for known keys
       if (key === "productId") {
-        state.productId = value; // Assign productId directly to state
-      }else if(key === "supplierId"){
-        state.supplierId = value;
-      } 
-      else if (!["shopId", "userId"].includes(key)) {
-        params[key] = value;
+        state.productId = value;
+        return;
       }
+
+      if (key === "supplierId") {
+        state.supplierId = value;
+        return;
+      }
+
+      // Skip keys we don't want to include in params
+      if (["shopId", "userId"].includes(key)) return;
+
+      // Map keys to human-readable labels with optional formatting
+      const labelMap: Record<string, string> = {
+        generatedAt: "Imetengenezwa",
+        name: "Jina la bidhaa",
+        priceBought: "Bei ya kununua"
+      };
+
+      const label = labelMap[key] || key;
+
+      params[key] = value; // origional
+
+      uiParams[label] =
+        key === "generatedAt"
+          ? formatDateTime(value) || "Hakuna"
+          : key === "priceBought"
+          ? `${formatMoney(Number(value))}/=`
+          : value;
     });
 
+
     state.query = params;
-    state.generatedAt = params.generatedAt || "Hakuna"; // Store generatedAt with a fallback
+    state.rawParams = uiParams;
     state.editableFields.quantity = params.quantity || "1";
     state.editableFields.saleType = params.saleType || "cash";
     state.editableFields.discount = params.discount || "0";
@@ -117,6 +145,17 @@ const handleSubmit = $(async () => {
     return;
   }
 
+  if (!state.customerId && state.editableFields.saleType === "debt") {
+    // If saleType is "debt" and no customer is selected, show an error
+    state.modal = {
+      isOpen: true,
+      message: "Lazima uchague mteja au msajili kwanza",
+      isSuccess: false
+    };
+    state.isSubmitting = false;
+    return;
+  }
+
   const requestData = {
     ...state.query,
     ...state.editableFields,
@@ -129,6 +168,7 @@ const handleSubmit = $(async () => {
     customerId: state.customerId,
     calculatedTotal: state.calculatedTotal,
   };
+
 
         interface sendData {
         id?: string;
@@ -180,13 +220,13 @@ const handleButtonClick = $((btn: string) => {
 
       {state.isLoading ? (
         <p class="text-gray-600">Loading...</p>
-      ) : Object.keys(state.query).length === 0 ? (
+      ) : Object.keys(state.rawParams).length === 0 ? (
         <p class="text-red-500">❌ Hakuna query parameters zilizopatikana!</p>
       ) : (
         <div class="bg-white rounded-xl shadow-lg p-4 border border-gray-200 space-y-4">
           {/* Display product details */}
           <div class="grid sm:grid-cols-2 gap-4">
-            {Object.entries(state.query).map(([key, value]) => {
+            {Object.entries(state.rawParams).map(([key, value]) => {
               if (
                 ["quantity", "saleType", "discount", "description", "priceSold", "typeDetected"].includes(
                   key
@@ -308,7 +348,7 @@ const handleButtonClick = $((btn: string) => {
                 class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-300"
               >
                 <option value="cash">Cash</option>
-                <option value="debt">Deni</option>
+                {state.editableFields.typeDetected === "sales" && (<option value="debt">Deni</option>)}
               </select>
             </div>
 
@@ -341,7 +381,7 @@ const handleButtonClick = $((btn: string) => {
             )}
 
             {/* Fetch Customers */}
-            {state.editableFields.saleType === "debt" && (
+            {state.editableFields.saleType === "debt" && state.editableFields.typeDetected === "sales" && (
               <div class="sm:col-span-2">
                 <p class="text-gray-600 font-medium mb-2">Chagua Mteja:</p>
                 {state.customers.length > 0 ? (

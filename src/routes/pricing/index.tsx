@@ -1,6 +1,8 @@
 import { component$ } from '@builder.io/qwik';
+import { useNavigate } from '@builder.io/qwik-city';
 
 export default component$(() => {
+  const navigateTo = useNavigate();
   return (
 <div class="bg-gray-100 text-gray-800">
   <div class="max-w-6xl mx-auto p-4">
@@ -23,7 +25,9 @@ export default component$(() => {
 
         </ul>
 
-        <button class="bg-gradient-to-r from-green-500 via-green-700 to-green-900 text-white text-sm font-semibold py-2 rounded-lg transition mt-4 cursor-pointer">
+        <button class="bg-gradient-to-r from-green-500 via-green-700 to-green-900 text-white text-sm font-semibold py-2 rounded-lg transition mt-4 cursor-pointer"
+          onClick$={() => navigateTo('/subscribe?plan=msingi')}
+        >
             Chagua Kifurushi
         </button>
       </div>
@@ -40,12 +44,13 @@ export default component$(() => {
           <li>✔ Ripoti za kila siku na wiki</li>
           <li>✔ Kutunza Kumbukumbu miezi 3</li>
           <li>✔ Kujua bidhaa inayoulizwa sana</li>
-          <li>✔ Usajili wa mfanyakazi 1</li>
           <li>✔ Mpaka aina za bidhaa 300</li>
           <li>✔ Kufanya matunzo ya taarifa za mauzo kwenye simu (CSV backup)</li>
 
         </ul>
-        <button class="bg-gradient-to-r from-blue-500 via-blue-700 to-blue-900 text-white text-sm font-semibold py-2 rounded-lg transition mt-4 cursor-pointer">
+        <button class="bg-gradient-to-r from-blue-500 via-blue-700 to-blue-900 text-white text-sm font-semibold py-2 rounded-lg transition mt-4 cursor-pointer"
+          onClick$={() => navigateTo('/subscribe?plan=lite')}
+        >
             Chagua Kifurushi
         </button>
 
@@ -58,7 +63,7 @@ export default component$(() => {
         <p class="text-2xl font-bold mt-4">Tsh 30,000/= <span class="text-sm text-gray-500">kwa mwezi</span></p>
         <ul class="mt-4 space-y-2 text-sm">
           <li>⭐ Kifurushi cha myPosTech Lite </li>
-          <li>✔ Usimamizi wa wafanyakazi wote</li>
+          <li>✔ Usimamizi na usajili wa wafanyakazi wote</li>
           <li>✔ Taarifa za hisa (stock) na bidhaa zinazouzwa zaidi</li>
           <li>✔ Ripoti za kila siku, wiki, mwezi</li>
           <li>✔ Kujua bidhaa zilizo-expire</li>

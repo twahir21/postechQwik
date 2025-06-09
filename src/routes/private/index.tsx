@@ -10,9 +10,10 @@ import { ExpensesComponent } from "~/components/Expenses";
 import { SuppCrudComponent } from "~/components/Supp";
 import { SettingsComponent } from "~/components/Settings";
 import { MainGraph } from "~/components/reports/MainGraph";
-import { OthersComponent } from "~/components/Others";
+// import { OthersComponent } from "~/components/Others";
 import { CrudService } from "../api/base/oop";
 import { useAuthLoader } from "../layout";
+import { AskedProducts } from "~/components/Asked";
 
 
 export default component$(() => {
@@ -22,6 +23,7 @@ export default component$(() => {
     input: "",
     showCalculator: false,
     username: "",
+    notification: 0
   });
 
   const toggleSidebar = $(() => {
@@ -88,9 +90,19 @@ export default component$(() => {
     navigateLogout("/auth");  
   });
 
+  useVisibleTask$(async () => {
+    const notApi = new CrudService<{ id?: string; count: number }>("notifyCount");
+    const result = await notApi.get();
+
+    if(!result.success) return;
+    
+    store.notification = result.data[0].count;
+
+  });
+
 
   return (
-    <div class="flex min-h-screen">
+    <div class="flex min-h-screen m-0">
       {/* Sidebar & Overlay */}
       <aside
         class={`bg-gray-800 text-white fixed inset-y-0 left-0 transform transition-all duration-300 md:relative md:translate-x-0 w-64 p-4 z-50 ${
@@ -102,7 +114,7 @@ export default component$(() => {
         </button>
         <span class="inline-flex items-center pl-1">
           <img 
-            src="/newLogo.png" 
+            src="/newLogo.webp" 
             alt="Profile" 
             class="w-10 h-10 rounded-full border-2 border-blue-600 ml-2" 
             width="70" 
@@ -114,15 +126,15 @@ export default component$(() => {
         <nav class="mt-5">
           {[
             { name: "Nyumbani", emoji: "🏠" },
-            // { name: "Muongozo", emoji: "📖" },
             { name: "Anza hapa", emoji: "🚀" },
             { name: "Mauzo", emoji: "💰" },
-            { name: "Mengineyo", emoji: "🧿" },
+            // { name: "Mengineyo", emoji: "🧿" },
             { name: "Madeni", emoji: "💳" },
             { name: "Matumizi", emoji: "💸" },
             { name: "Ripoti", emoji: "📉" },
             { name: "Bidhaa", emoji: "📦" },
             { name: "Wateja", emoji: "👥" },
+            { name: "Zinazoulizwa", emoji: "⭐" },
             { name: "Wasambazaji", emoji: "🔗" },
             { name: "Mipangilio", emoji: "⚙️" },
           ].map(({ name, emoji }) => (
@@ -139,11 +151,11 @@ export default component$(() => {
 
       {/* Mobile Overlay */}
       {store.isSidebarOpen && (
-        <div class="fixed inset-0 bg-opacity-50 md:hidden" onClick$={toggleSidebar}></div>
+        <div class="fixed inset-0 bg-opacity-50 md:hidden m-0" onClick$={toggleSidebar}></div>
       )}
 
       {/* Main Content */}
-      <div class="flex-1 flex flex-col">
+      <div class="w-full flex-1 flex flex-col m-0">
         {/* Top Navbar */}
         <header class="bg-white shadow-md p-4 flex justify-between items-center">
           <button class="md:hidden" onClick$={toggleSidebar}>☰</button>
@@ -193,9 +205,28 @@ export default component$(() => {
                 </div>
               )}
             </div>
+            <button title="notification">
+              <div style="position: relative; display: inline-block;">
+                🔔
+              {store.notification > 0 && (
+                <span style="
+                  position: absolute;
+                  top: -8px;
+                  right: -8px;
+                  background: red;
+                  color: white;
+                  border-radius: 50%;
+                  padding: 2px 4px;
+                  font-size: 11px;
+                ">                 
+                  {store.notification}
+                </span>
+              )}
+              </div>
+            </button>
+
             <button title="Logout" onClick$={logout}> 👋 </button>
 
-            {/* <button title="profile"> 👤 </button> */}
           </div>
         </header>
 
@@ -204,15 +235,15 @@ export default component$(() => {
           <h1 class="text-xl font-bold pb-2">Karibu, {store.username}</h1>
 
           {store.currentPage === "Nyumbani" && <HomeComponent />}
-          {/* {store.currentPage === "Muongozo" && <UsageComponent />} */}
           {store.currentPage === "Anza hapa" &&  <ProductComponent />}
           {store.currentPage === "Mauzo" && <SalesComponent />}
-          {store.currentPage === "Mengineyo" && <OthersComponent />}
+          {/* {store.currentPage === "Mengineyo" && <OthersComponent />} */}
           {store.currentPage === "Madeni" && <DebtComponent />}
           {store.currentPage === "Matumizi" && <ExpensesComponent />}
           {store.currentPage === "Ripoti" && <MainGraph />}
           {store.currentPage === "Bidhaa" && <CrudPrdComponent /> }
           {store.currentPage === "Wateja" && <CustomerComponent />}
+          {store.currentPage === "Zinazoulizwa" && <AskedProducts />}
           {store.currentPage === "Wasambazaji" && <SuppCrudComponent />} 
           {store.currentPage === "Mipangilio" && <SettingsComponent />}
         </main>

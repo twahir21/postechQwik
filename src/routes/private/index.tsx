@@ -1,4 +1,4 @@
-import { component$, useStore, $, useTask$, useVisibleTask$ } from "@builder.io/qwik";
+import { component$, useStore, $, useTask$, useVisibleTask$, useSignal } from "@builder.io/qwik";
 import { useNavigate } from "@builder.io/qwik-city";
 import { HomeComponent } from "~/components/Home";
 import { ProductComponent } from "~/components/Products";
@@ -14,6 +14,8 @@ import { MainGraph } from "~/components/reports/MainGraph";
 import { CrudService } from "../api/base/oop";
 import { useAuthLoader } from "../layout";
 import { AskedProducts } from "~/components/Asked";
+import { Speech } from "~/components/Speech";
+import { Typing } from "~/components/Typing";
 
 
 export default component$(() => {
@@ -24,6 +26,20 @@ export default component$(() => {
     showCalculator: false,
     username: "",
     notification: 0
+  });
+
+  const showTooltip = useSignal(false);
+  const showMic = useSignal(false); // only render <Speech /> after tooltip closed
+  const active = useSignal<'extra' | 'warning' | null>(null);
+
+  const toggle = $((section: 'extra' | 'warning') => {
+    active.value = active.value === section ? null : section;
+  });
+
+
+  const closeTooltip = $(() => {
+    showTooltip.value = false;
+    showMic.value = true;
   });
 
   const toggleSidebar = $(() => {
@@ -50,6 +66,7 @@ export default component$(() => {
     if (window.innerWidth < 768) store.isSidebarOpen = false; // Close on mobile
   });
 
+  // don't change, you must use useVisibleTask$ to fetch when component mounted otherwise username will be undefined (Mgeni)
   const fetchUsername = useVisibleTask$(async () => {
     const getNameApi = new CrudService<{ id?: string; username: string}>("me");
     const getName = await getNameApi.get();
@@ -62,7 +79,7 @@ export default component$(() => {
       let username = usernameData.value.username;
       if (!username) {
         username = "Mgeni"
-        fetchUsername;
+        fetchUsername; // actual call 
       }
 
       // Utility function to capitalize the first letter of each word
@@ -100,6 +117,14 @@ export default component$(() => {
 
   });
 
+  // Show once when component is mounted
+  useVisibleTask$(() => {
+    const seenTip = localStorage.getItem('seenVoiceTip');
+    if (!seenTip) {
+      showTooltip.value = true;
+      localStorage.setItem('seenVoiceTip', 'true');
+    }
+  });
 
   return (
     <div class="flex min-h-screen m-0">
@@ -134,7 +159,7 @@ export default component$(() => {
             { name: "Ripoti", emoji: "📉" },
             { name: "Bidhaa", emoji: "📦" },
             { name: "Wateja", emoji: "👥" },
-            { name: "Zinazoulizwa", emoji: "⭐" },
+            // { name: "Zinazoulizwa", emoji: "⭐" },
             { name: "Wasambazaji", emoji: "🔗" },
             { name: "Mipangilio", emoji: "⚙️" },
           ].map(({ name, emoji }) => (
@@ -158,11 +183,15 @@ export default component$(() => {
       <div class="w-full flex-1 flex flex-col m-0">
         {/* Top Navbar */}
         <header class="bg-white shadow-md p-4 flex justify-between items-center">
+        {/* Left side: sidebar toggle  */}
+        <div>
           <button class="md:hidden" onClick$={toggleSidebar}>☰</button>
-          <h1>Dashboard</h1>
+        </div>  
+        {/* Right side   */}
           <div class="flex gap-5">
             <div class="relative">
               <button
+                title="Calculator"
                 class="p-2 text-white rounded"
                 onClick$={() => (store.showCalculator = true)}
               >
@@ -170,7 +199,7 @@ export default component$(() => {
               </button>
 
               {store.showCalculator && (
-                <div class="fixed inset-0 flex justify-end items-center bg-opacity-50">
+                <div class="fixed inset-0 z-50 flex justify-end items-center bg-opacity-50">
                   <div class="bg-white p-6 rounded-lg shadow-lg w-80 relative border-2 border-b-blue-900">
                     <button
                       class="absolute top-2 right-2 text-gray-600 hover:text-red-600 pb-2"
@@ -205,7 +234,93 @@ export default component$(() => {
                 </div>
               )}
             </div>
-            <button title="notification">
+
+              <div class="relative">
+                <Typing />
+              </div>
+            
+            {/* tooltip  */}
+            <div class="relative">
+              <button
+                class="pt-2"
+                onClick$={() => (showTooltip.value = !showTooltip.value)}
+                title="Maelezo"
+              >
+                ℹ️
+              </button>
+
+              {showTooltip.value && (
+                <div class="fixed z-50 top-8 right-2 w-80 bg-white text-gray-700 p-4 rounded shadow border text-sm">
+                  <h3 class="font-bold mb-2">🗣️ Jinsi ya kutumia sauti</h3>
+                    <ul class="pl-4 space-y-2">
+                      <li>🧠 <strong>Fomula:</strong> <code>[kitendo] → [mteja] → bidhaa → [kipimo] → [kiasi] → [punguzo]</code>. Neno ndani ya [] sio lazima.</li>
+
+                      <li>🟢 <strong>Kitendo:</strong> Tumia mojawapo ya maneno: <strong>nimeuza</strong>, <strong>nimenunua</strong>, <strong>nimetumia</strong>, au <strong>nimemkopesha</strong>. Ukiacha kitendo maana yake ni nimeuza.</li>
+
+                      <li>👤 <strong>Kwa Mikopo:</strong> Taja jina kamili la mteja moja kwa moja baada ya kitendo.<br /> Mfano: <code>Nimemkopesha mama juma sukari</code></li>
+
+                      <li>📦 <strong>Taja Bidhaa:</strong> Mfano: <code>sukari</code>, <code>maziwa</code>, <code>mchele</code></li>
+
+                      <li>
+                        {/* Extra info Accordion  */}
+                        <details open={active.value === 'extra'} onToggle$={() => toggle('extra')}>
+                          <summary class="cursor-pointer text-blue-600 hover:underline">
+                            {active.value === 'extra' ? '👇 Funga maelezo ya ziada' : '👉 Tafadhali bofya hapa kuendelea ...'}
+                          </summary>
+                          <div class="mt-2 space-y-2">
+                            <li>⚖️ <strong>(Hiari) Taja Kipimo Kabla ya Kiasi:</strong> Mfano: <code>kilo</code>, <code>lita</code>, <code>katoni</code>, <code>pisi</code>.</li>
+
+                            <li>🔢 <strong>(Hiari) Taja Kiasi:</strong> Mfano: <code>moja</code>, <code>kumi</code>, <code>robo</code>, <code>nusu</code>, <code>nusu na robo au robo tatu</code>. Ukiacha ina maana ni 1</li>
+
+                            <li>💸 <strong>(Hiari) Taja Punguzo:</strong> Mfano: <code>punguzo mia</code>, <code>punguzo 200</code><br />
+                             ⚠️ <strong>Angalizo:</strong> Kama punguzo ni zaidi ya 10,000 tumia tarakimu, mfano <code>punguzo 12000</code></li>
+
+                          </div>
+                        </details>
+                      </li>
+
+                      <li>
+                        {/* Warning accordion  */}
+                        <details open={active.value === 'warning'} onToggle$={() => toggle('warning')}>
+                          <summary class="cursor-pointer text-blue-600 hover:underline">
+                            {active.value === 'warning' ? '👇 Funga maelezo ya tahadhari' : '📘 Bonyeza kuona maelezo muhimu sana ya kuzingatia...'}
+                          </summary>
+                          <div class="mt-2 space-y-2">
+                            <li>⛔ <strong>Onyo Kuhusu Kiasi:</strong> Usiseme <code>maziwa nusu lita</code>. Badala yake sema <code>maziwa nusu</code> au <code>maziwa lita tatu</code> kwa usahihi wa mfumo</li>
+
+                            <li>📝 <strong>Mifano ya Sentensi:</strong>
+                              <ul class="list-disc pl-6 space-y-1">
+                                <li>Nimeuza chumvi tatu</li>
+                                <li>Nimenunua maziwa lita mbili</li>
+                                <li>Nimemkopesha mama juma sukari kilo tatu punguzo 300</li>
+                                <li>Nimetumia 2000 kwa ajili ya nauli</li>
+                              </ul>
+                            </li>
+                          </div>
+                        </details>
+                      </li>
+                    </ul>
+
+
+                  <div class="text-right mt-2">
+                    <button
+                      class="text-red-500 text-sm"
+                      onClick$={closeTooltip}
+                    >
+                      Funga
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+
+            {/* 🧠 Embed Speech component inline here */}
+            <div class="relative">
+              <Speech />
+            </div>
+
+            <button title="ujumbe">
               <div style="position: relative; display: inline-block;">
                 🔔
               {store.notification > 0 && (
@@ -225,7 +340,7 @@ export default component$(() => {
               </div>
             </button>
 
-            <button title="Logout" onClick$={logout}> 👋 </button>
+            <button title="Funga" onClick$={logout}> 👋 </button>
 
           </div>
         </header>

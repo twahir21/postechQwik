@@ -73,17 +73,17 @@ export default component$(() => {
   const saleRefetch = useSignal(false);
   const productRefetch = useSignal(false);
   const customerRefetch = useSignal(false);
-  const qrCodeRefetch =  useSignal(false);
   const supplierRefetch = useSignal(false);
   const categoryRefetch = useSignal(false);
   const refetchAnalytics = useSignal(false);
+  const debtRefetch = useSignal(false);
 
   // Provide all signals as a grouped context
   useContextProvider(RefetchContext, {
     saleRefetch,
     productRefetch,
     customerRefetch,
-    qrCodeRefetch,
+    debtRefetch,
     supplierRefetch,
     categoryRefetch,
     refetchAnalytics

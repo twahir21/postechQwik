@@ -1,13 +1,37 @@
-import { component$, useStore } from '@builder.io/qwik';
+import { $, component$, useContext, useStore } from '@builder.io/qwik';
+import { CrudService } from '~/routes/api/base/oop';
+import { Toast } from './Toast';
+import { RefetchContext } from '../context/refreshContext';
 
-export const Popup = component$(() => {
+export const Popup = component$(({ customerId, debtId }: { customerId: string; debtId: string }) => {
   const state = useStore({
     showPopup: false,
     amountPaid: '',
   });
 
+  const modal = useStore({
+    isOpen: false,
+    isSuccess: false,
+    message: ''
+  });
+
+  const { debtRefetch } = useContext(RefetchContext);
+
+  const sendData = $(async () => {
+    const newAPi = new CrudService<{ id?: string; amountPaid: number, customerId: string; debtId: string }>("pay-debt");
+
+    const res = await newAPi.create({ amountPaid: Number(state.amountPaid), customerId, debtId });
+    
+    modal.isOpen = true;
+    modal.isSuccess = res.success;
+    modal.message = res.message || (res.success ? "Imefanikiwa" : "Imeshindwa kubadili taarifa");
+
+    // trigger refetch
+    debtRefetch.value = true;
+  });
+
   return (
-    <div class="h-auto w-auto flex items-center justify-center">
+    <div class="h-auto w-auto flex items-center">
       {/* Trigger Button */}
       <button
         onClick$={() => (state.showPopup = true)}
@@ -48,7 +72,8 @@ export const Popup = component$(() => {
 
           <form
             preventdefault:submit
-            onSubmit$={() => {
+            onSubmit$={async () => {
+              await sendData();
               state.showPopup = false;
             }}
             class="flex flex-col gap-4"
@@ -74,6 +99,20 @@ export const Popup = component$(() => {
           </form>
         </div>
       </div>
+
+      {/* Modal Popup */}
+      {modal.isOpen && (
+        <Toast
+          isOpen={modal.isOpen}
+          type={modal.isSuccess}
+          message={modal.message}
+          onClose$={$(() => {
+            modal.isOpen = false;
+        })}
+        />
+      )}
+
+
     </div>
   );
 });

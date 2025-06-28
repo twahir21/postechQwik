@@ -6,10 +6,10 @@ export interface RefetchFlags {
   saleRefetch: Signal<boolean>;
   productRefetch: Signal<boolean>;
   customerRefetch: Signal<boolean>;
-  qrCodeRefetch: Signal<boolean>;
   supplierRefetch: Signal<boolean>;
   categoryRefetch: Signal<boolean>;
   refetchAnalytics: Signal<boolean>;
+  debtRefetch: Signal<boolean>;
 
   // Add more flags as needed
 }

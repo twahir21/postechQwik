@@ -6,26 +6,34 @@ interface Statistics {
 }
 
 export interface CustomerDebt {
+  debtId: string;
   customerId: string;
   name: string;
-  totalDebt: string;          // String representation of a number
-  remainingAmount: string;    // String representation of a number
-  lastPaymentDate: null | string; // ISO date string or null
+  totalDebt: string;          
+  remainingAmount: string;    
+  lastPaymentDate: null | string; 
   createdAt: null | string;
 }
 
 export interface RecentPayment {
-  // Define this if recentPayments have structure
-  // Example:
-  // paymentId: string;
-  // amountPaid: string;
-  // paymentDate: string;
+  customerId: string;
+  name: string;
+  totalPaid: string;
+  paymentDate: string;
 }
+
+interface debtReceipts {
+  customerId: string;
+  product: string;
+  quantity: number;
+  priceSold: string;
+  total: string;
+}[]
 
 interface Pagination {
   currentPage: number;
   pageSize: number;
-  totalCount: string; // Could also be number depending on backend
+  totalCount: number; 
 }
 
 export interface DataItemDebts {
@@ -33,5 +41,9 @@ export interface DataItemDebts {
   statistics: Statistics;
   customerDebts: CustomerDebt[];
   recentPayments: RecentPayment[];
+  madeniYaliyolipwa: number;
+  madeniYaliyokusanywa: number;
+  totalCollected: number;
   pagination: Pagination;
+  debtReceipts: debtReceipts;
 }

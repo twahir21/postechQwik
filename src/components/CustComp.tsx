@@ -15,7 +15,7 @@ export const CustomersCrudComponent =  component$(() => {
   const total = useSignal(0);
   const search = useSignal('');
   const currentPage = useSignal(1);
-  const perPage = 10;
+  const perPage = 5;
   const isLoading = useSignal(false);
   const selectedCustomer = useSignal<Customer | null>(null);
   const isEditing = useSignal(false);
@@ -32,6 +32,9 @@ export const CustomersCrudComponent =  component$(() => {
 
   const fetchCustomers = $(async () => {
     isLoading.value = true;
+
+    if (search.value.length > 0) currentPage.value = 1; // resets the page for new search
+
     const newFetchApi = new CrudService<Customer>(`customers?search=${encodeURIComponent(search.value)}&page=${currentPage.value}&limit=${perPage}`);
     const fetchData = await newFetchApi.get();
     isLoading.value = false;

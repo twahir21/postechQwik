@@ -217,21 +217,21 @@ export default component$(() => {
         </header>
 
         {/* HERO SECTION  */}
-        <section id="hero" class="flex flex-col-reverse md:flex-row items-center min-h-screen px-6 max-w-6xl mx-auto pt-20 gap-12">
+        <section id="hero" class="flex flex-col-reverse md:flex-row items-center min-h-screen px-6 max-w-6xl mx-auto pt-20 pb-12 md:pb-0 gap-12">
           {/* Left side - text */}
           <div class="w-full md:w-3/4">
             <h1 class="text-2xl sm:text-3xl md:text-3xl font-bold mb-4">
-              Boresha biashara yako kwa QR Code
+              Tunza Biashara yako kwa sauti au maandishi.
             </h1>
             <p class="text-sm sm:text-base md:text-base text-gray-600 mb-6 dark:text-gray-400">
               <Typewriter
-                text="Mfumo wa kisasa ulio na uwezo wa kuboresha na kurahisisha shughuli za kila siku za biashara yako kwa ku scan QR Codes maalumu zitakazotengenezwa na mfumo, hivyo kufanya mahesabu yako na rekodi za mauzo kiotomatiki kwa simu yako tu!. Pia unaweza kupakua App yako, itakuja kama ujumbe ukiwa unatumia mfumo mara kwa mara"
+                text="Mfumo wa kisasa ulio na uwezo wa kuboresha na kurahisisha shughuli za kila siku za biashara yako kwa kutumia kinasa sauti au maandishi kufanya mahesabu yako na rekodi za mauzo kiotomatiki kwa simu yako tu!"
                 speed={50}
               />
             </p>
             <div class="flex flex-wrap gap-4">
               <Link
-                href="/auth?reg=true"
+                href="/private"
                 class="bg-gray-900 dark:bg-gray-700 text-white px-6 py-3 rounded-full shadow-md hover:bg-gray-800 transition text-sm sm:text-base md:text-base"
               >
                 Jaribu Bure (siku 14)
@@ -289,8 +289,8 @@ export default component$(() => {
               <p class="text-sm sm:text-base md:text-base text-gray-600 dark:text-gray-300">
                 myPosTech umeundwa mahsusi kutatua changamoto halisi za wafanyabiashara wakubwa na wadogo.
                 Wafanyabiashara wengi walikuwa wanapoteza faida kwa sababu ya kumbukumbu hafifu za bidhaa zao, hesabu zisizo sahihi, bidhaa kuisha bila kujua kupelekea kukosa wateja, na madeni lisilofuatiliwa vizuri.
-                myPosTech imekuja kama suluhisho rahisi, salama na nafuu – kwa kila biashara, Kwa kutengeneza QR Code za bidhaa zako kiotomatiki, kuuza na kuscan QR Code ya bidhaa, kurekodi mauzo kiotomatiki, na kuona faida yako papo hapo.
-                Mfumo hujifunza mwenendo wa biashara yako kupitia akili bandia (AI), na hukupa ushauri wa bidhaa gani kuagiza, lini, na kwa bei ipi.
+                myPosTech imekuja kama suluhisho rahisi, salama na nafuu – kwa kila biashara, Kwa kusajili bidhaa kwa mara moja tu, kuuza kwa kusema "Nimeuza sukari robo", kurekodi mauzo kiotomatiki, na kuona faida yako papo hapo.
+                {/* Mfumo hujifunza mwenendo wa biashara yako kupitia akili bandia (AI) { }, na hukupa ushauri wa bidhaa gani kuagiza, lini, na kwa bei ipi. */}
                 myPosTech - Biashara yako, Teknolojia yetu.
               </p>
           </div>        
@@ -420,7 +420,7 @@ export const head: DocumentHead = {
       
       // Open Graph (OG) tags for social media
       { property: "og:title", content: "myPosTech - Mfumo wa Kisasa wa Biashara" },
-      { property: "og:description", content: "Mfumo ya kisasa unayotumia QR Codes. fuatilia bidhaa, mauzo na madeni. myPosTech ~ Biashara yako, teknolojia yetu" },
+      { property: "og:description", content: "Mfumo ya kisasa unayotumia Sauti au maandishi kurekodi. fuatilia bidhaa, mauzo na madeni. myPosTech ~ Biashara yako, teknolojia yetu" },
       { property: "og:image", content: "https://www.mypostech.store/thumbnail2.webp" },
       { property: "og:url", content: "https://mypostech.store" },
       { property: "og:type", content: "website" },
@@ -430,7 +430,7 @@ export const head: DocumentHead = {
       // Twitter Card meta tags
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "myPosTech - Mfumo bora kwa biashara zote" },
-      { name: "twitter:description", content: "Mauzo ya haraka kwa kutumia QR, dashibodi ya Kiswahili, na muundo wa kisasa wa simu." },
+      { name: "twitter:description", content: "Mauzo ya haraka kwa kutumia Mic (sauti), dashibodi ya Kiswahili, na muundo wa kisasa wa simu." },
       { name: "twitter:image", content: "https://mypostech.store/thumbnail2.webp" },
   
       // Structured Data (JSON-LD) for enhanced SEO
@@ -463,9 +463,9 @@ export const head: DocumentHead = {
                   },
                   {
                     "@type": "Product",
-                    "name": "myPosTech QR POS System",
+                    "name": "myPosTech - POS System",
                     "image": "https://mypostech.store/thumbnail2.webp",
-                    "description": "POS system with QR code support, real-time analytics, debt tracking, and Swahili dashboard.",
+                    "description": "POS system with sell-by-mic support, real-time analytics, debt tracking, and Swahili dashboard.",
                     "brand": {
                       "@type": "Brand",
                       "name": "myPosTech"
@@ -502,17 +502,10 @@ export const head: DocumentHead = {
                         "name": "Je, myPosTech ni nini?",
                         "acceptedAnswer": {
                           "@type": "Answer",
-                          "text": "myPosTech ni mfumo wa kisasa wa mauzo na stoo unaotumia QR codes kusaidia wafanyabiashara."
+                          "text": "myPosTech ni mfumo wa kisasa wa mauzo na stoo unaotumia Sauti au maandishi kusaidia wafanyabiashara."
                         }
                       },
-                      {
-                        "@type": "Question",
-                        "name": "Je, ninatumia nini kuscan qrcode?",
-                        "acceptedAnswer": {
-                          "@type": "Answer",
-                          "text": "Tumia app yoyote kwenye simu yako isiyokuwa na matangazo, lakini napendekeza Google Lens"
-                        }
-                      },
+
                       {
                         "@type": "Question",
                         "name": "myPosTech inasaidia lugha gani?",

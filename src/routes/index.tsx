@@ -12,6 +12,9 @@ import { Steps } from "~/components/Steps";
 import { Last } from "~/components/Last";
 import { Partiners } from "~/components/Partiners";
 import { InstallPWA } from "~/components/ui/install";
+import { CrudService } from "./api/base/oop";
+import FingerprintJS from '@fingerprintjs/fingerprintjs'
+
 
 export default component$(() => {
 
@@ -19,6 +22,8 @@ export default component$(() => {
     const iconPathSig = useSignal<SVGPathElement>();
     const iconPathMobileSig = useSignal<SVGPathElement>();
     const theme = useSignal<'light' | 'dark'>('light');
+
+    const visitorIdData = useSignal<string>('');
 
     // store 
     const contactStore = useStore({
@@ -109,12 +114,38 @@ export default component$(() => {
         })
   
     // Load saved theme on client
-    useVisibleTask$(() => {
+    useVisibleTask$( async () => {
       const stored = localStorage.getItem('theme');
       if (stored === 'dark') {
         theme.value = 'dark';
         document.documentElement.classList.add('dark');
       }
+
+      // get visitorID
+      const fpPromise = FingerprintJS.load()
+
+      ;(async () => {
+        // Get the visitor identifier when you need it.
+        const fp = await fpPromise
+        const result = await fp.get()
+
+        visitorIdData.value = result.visitorId
+      // Check if 'isCounted' exists in localStorage
+      const isCounted = localStorage.getItem('isCounted');
+
+      if (isCounted === 'yes') {
+      console.log('isCounted flag exists with value "yes"');
+      } else {
+        // Set the flag if it doesn't exist or isn't 'yes'
+        console.log(visitorIdData.value, 'visitorIdData.value', typeof visitorIdData.value);
+          const api = new CrudService<{ id?: string; visitorId: string }>("sign-visitorDetails");
+          await api.create({ visitorId: result.visitorId });
+
+          localStorage.setItem('isCounted', 'yes');
+          console.log('Set isCounted flag to "yes"');
+      }
+      })()
+
     });
   
       // Update SVG path based on theme

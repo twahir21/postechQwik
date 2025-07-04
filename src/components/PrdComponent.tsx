@@ -1,6 +1,7 @@
 import { component$, useSignal, useTask$, $, useStore } from '@builder.io/qwik';
 import { CrudService } from '~/routes/api/base/oop';
 import { Toast } from './ui/Toast';
+import { env } from '~/routes/api/base/config';
 
 interface Product {
   id: string;
@@ -38,9 +39,10 @@ export const CrudPrdComponent =  component$(() => {
 
   const fetchProducts = $(async () => {
     isLoading.value = true;
+    const backendURL = env.mode === 'development' ? env.backendURL_DEV : env.backendURL;
     try {
       const res = await fetch(
-        `http://localhost:3000/products?search=${encodeURIComponent(search.value)}&page=${currentPage.value}&limit=${perPage}`,{
+        `${backendURL}/products?search=${encodeURIComponent(search.value)}&page=${currentPage.value}&limit=${perPage}`,{
           method: 'GET',
           credentials: 'include',
           headers: {

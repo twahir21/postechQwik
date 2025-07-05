@@ -123,11 +123,11 @@ useVisibleTask$(async ({ track }) => {
 
     // most debt user
     analyticsStore.mostDebt = analytics.mostDebtUser?.name || 'Hakuna';
-    analyticsStore.amountDebt = formatMoney(Number(analytics.mostDebtUser?.remainingAmount)) || '0';
+    analyticsStore.amountDebt = formatMoney(Number(analytics.mostDebtUser?.remainingAmount) || 0) || '0';
 
     // long debt user
     analyticsStore.longDebt = analytics.longTermDebtUser?.name || 'Hakuna';
-    analyticsStore.amount = formatMoney(Number(analytics.longTermDebtUser?.remainingAmount)) || '0';
+    analyticsStore.amount = formatMoney(Number(analytics.longTermDebtUser?.remainingAmount) || 0) || '0';
     analyticsStore.daysDebt = formatDateOnly(analytics.longTermDebtUser?.createdAt || 'Hakuna');
 
     // lowest stock product

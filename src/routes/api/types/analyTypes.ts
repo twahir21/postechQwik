@@ -109,7 +109,7 @@ export interface AnalyticsTypes {
     highestProfitProduct: highestProfitProduct | null;
     mostAsked: string;
     netProfit: netProfit;
-    lowestProduct: lowestProduct;
+    lowestProduct: lowestProduct | null;
     lowStockProducts: lowStockProducts[];
     mostSoldProductByQuantity: mostSoldProductByQuantity | null;
     longTermDebtUser: longTermDebtUser | null;

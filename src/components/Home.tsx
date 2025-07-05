@@ -131,9 +131,9 @@ useVisibleTask$(async ({ track }) => {
     analyticsStore.daysDebt = formatDateOnly(analytics.longTermDebtUser?.createdAt || 'Hakuna');
 
     // lowest stock product
-    analyticsStore.lowestPrdName= analytics.lowestProduct.name;
-    analyticsStore.lowestPrdStock = analytics.lowestProduct.stock;
-    analyticsStore.prdUnit = analytics.lowestProduct.unit;
+    analyticsStore.lowestPrdName= analytics.lowestProduct?.name || "Hakuna";
+    analyticsStore.lowestPrdStock = analytics.lowestProduct?.stock || 0;
+    analyticsStore.prdUnit = analytics.lowestProduct?.unit || "Hakuna";
 
     // most asked
     analyticsStore.mostAsked = analytics.mostAsked;

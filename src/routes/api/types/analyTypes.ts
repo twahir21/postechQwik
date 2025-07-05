@@ -112,8 +112,8 @@ export interface AnalyticsTypes {
     lowestProduct: lowestProduct;
     lowStockProducts: lowStockProducts[];
     mostSoldProductByQuantity: mostSoldProductByQuantity | null;
-    longTermDebtUser: longTermDebtUser;
-    mostDebtUser: mostDebtUser;
+    longTermDebtUser: longTermDebtUser | null;
+    mostDebtUser: mostDebtUser | null;
     daysSinceDebt: string;
     salesByDay: salesByDay[];
     expensesByDay: expensesByDay[];

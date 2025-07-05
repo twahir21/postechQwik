@@ -122,13 +122,13 @@ useVisibleTask$(async ({ track }) => {
     console.log("Analytics: ", analytics);
 
     // most debt user
-    analyticsStore.mostDebt = analytics.mostDebtUser.name;
-    analyticsStore.amountDebt = formatMoney(Number(analytics.mostDebtUser.remainingAmount));
+    analyticsStore.mostDebt = analytics.mostDebtUser?.name || 'Hakuna';
+    analyticsStore.amountDebt = formatMoney(Number(analytics.mostDebtUser?.remainingAmount)) || '0';
 
     // long debt user
-    analyticsStore.longDebt = analytics.longTermDebtUser.name;
-    analyticsStore.amount = formatMoney(Number(analytics.longTermDebtUser.remainingAmount));
-    analyticsStore.daysDebt = formatDateOnly(analytics.longTermDebtUser.createdAt);
+    analyticsStore.longDebt = analytics.longTermDebtUser?.name || 'Hakuna';
+    analyticsStore.amount = formatMoney(Number(analytics.longTermDebtUser?.remainingAmount)) || '0';
+    analyticsStore.daysDebt = formatDateOnly(analytics.longTermDebtUser?.createdAt || 'Hakuna');
 
     // lowest stock product
     analyticsStore.lowestPrdName= analytics.lowestProduct.name;

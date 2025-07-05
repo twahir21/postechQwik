@@ -43,6 +43,8 @@ export const HomeComponent = component$(() => {
   const { lowStockProducts } = useContext(lowStockProductsData);
   const { subscription } = useContext(subscriptionData);
 
+  const isLoading = useSignal(false);
+
   // refetch when changes occur in data
   const { productRefetch, refetchAnalytics } = useContext(RefetchContext);
   
@@ -51,9 +53,15 @@ useVisibleTask$(async ({ track }) => {
   track(() => productRefetch.value); // track the refetch signal
   track(() => refetchAnalytics.value);
 
+  // set loading state
+  isLoading.value = true;
+
     const analyticsApi = new CrudService<AnalyticsTypes>("analytics");
     const analyticsData = await analyticsApi.get();
-    if (!analyticsData.success) return;
+    if (!analyticsData.success) {
+      isLoading.value = false;
+      return;
+    }
     const analytics = analyticsData.data[0];
 
     // assign data to the store
@@ -131,13 +139,14 @@ useVisibleTask$(async ({ track }) => {
     analyticsStore.mostAsked = analytics.mostAsked;
 
     // now allow rendering of the graph
+    isLoading.value = false; // ✅ set loading to false after data is fetched
     isGraphReady.value = true; // ✅ trigger Graph display only after data is ready
 
 });
 
   return (
   <>
-  {!isGraphReady.value ?(
+  { isLoading.value ?(
     // Custom Loader
     <Loader />
   ):(

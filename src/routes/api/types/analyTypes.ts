@@ -27,7 +27,6 @@ export interface netProfit {
 export interface lowestProduct {
     id: string;
     name: string;
-    categoryId: string;
     priceSold: number;
     stock: number;
     shopId: string;
@@ -42,7 +41,6 @@ export interface lowestProduct {
 export interface lowStockProducts {
     id: string;
     name: string;
-    categoryId: string;
     priceSold: number;
     stock: number;
     shopId: string;

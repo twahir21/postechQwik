@@ -6,7 +6,6 @@ import { env } from '~/routes/api/base/config';
 interface Product {
   id: string;
   name: string;
-  categoryId: string;
   priceSold: number;
   priceBought: number;
   stock: number;
@@ -192,7 +191,7 @@ export const CrudPrdComponent =  component$(() => {
               <div class="text-sm">Bei ya kuuza: Tsh {product.priceSold}</div>
               <div class="text-sm">Bei ya kununua: Tsh {product.priceBought}</div>
               <div class="text-sm">Hisa: {product.stock}</div>
-              <div class="text-sm">Kategoria: {product.unit}</div>
+              <div class="text-sm">Kipimo: {product.unit}</div>
               <div class="text-sm mt-1">
                 <span
                   class={`inline-block px-2 py-1 text-xs rounded-full ${

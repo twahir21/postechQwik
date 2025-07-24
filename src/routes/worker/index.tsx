@@ -1,6 +1,7 @@
 import { $, component$, useStore } from "@builder.io/qwik";
 import { TrashIcon } from "lucide-qwik";
 import { CrudService } from "../api/base/oop";
+import { Toast } from "~/components/ui/Toast";
 
 interface Assistant {
   id: number;
@@ -21,6 +22,12 @@ export default component$(() => {
     newName: "",
     newPermissions: [] as string[],
   });
+  
+  const modal = useStore({
+    isOpen: false,
+    isSuccess: false,
+    message: ''
+  });
 
   const togglePermission = $((permission: string) => {
     const index = state.newPermissions.indexOf(permission);
@@ -35,6 +42,10 @@ export default component$(() => {
     const api = new CrudService("mobile/payment-status");
     const response = await api.get();
     console.log(response);
+
+    modal.isOpen = true;
+    modal.isSuccess = response.success;
+    modal.message = response.message || 'Tatizo limejitokeza';
   })
 
   const addAssistant = $(() => {
@@ -123,6 +134,17 @@ export default component$(() => {
           Hakuna wasaidizi waliowekwa bado.
         </p>
       )}
-    </div>
+
+        {modal.isOpen && (
+          <Toast
+            isOpen={modal.isOpen}
+            type={modal.isSuccess}
+            message={modal.message}
+            onClose$={$(() => {
+              modal.isOpen = false;
+            })}
+          />
+        )}
+      </div>
   );
 });

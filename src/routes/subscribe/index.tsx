@@ -56,6 +56,7 @@ if (!isValidPlan(plan)) return (
   </div>
 );
 
+
   // Computed total with type safety
   const totalPrice = useComputed$(() => {
     const basePrice = planDetails[plan].monthly;
@@ -79,17 +80,6 @@ if (!isValidPlan(plan)) return (
       return;
     }
 
-    const apiKey = new CrudService("mobile/generate-token");
-    const apiRes = await apiKey.get();
-
-    if (!apiRes.success){
-      modal.isOpen = true;
-      modal.isSuccess = false;
-      modal.message = apiRes.message || 'Kuna hitilafu katika kupata tokeni ya malipo, tafadhali jaribu tena baadaye.';
-      isLoading.value = false;
-      return;
-    }
-
     const payApi = new CrudService<PaymentRequest>("mobile/check-USSD");
     const result = await payApi.create({ price: totalPrice.value, duration: duration.value, paymentMethod: paymentMethod.value, plan: plan });
 
@@ -97,16 +87,18 @@ if (!isValidPlan(plan)) return (
     if (!result.success) {
       modal.isOpen = true;
       modal.isSuccess = result.success;
-      modal.message = result.message || 'Huwezi kufanya malipo bila kuwa na laini ya Tigo au Airtel kwenye kifaa chako.';
+      modal.message = result.message || 'Huduma ya malipo ina hitilafu kwa sasa, toa taarifa au jaribu tena baadae';
     }
 
     const payNowApi = new CrudService<PaymentRequest>("mobile/USSD-push");
     const payNowResult = await payNowApi.get();
 
+
+
     if (!payNowResult.success) {
       modal.isOpen = true;
       modal.isSuccess = false;
-      modal.message = payNowResult.message || 'Kuna hitilafu katika kuanzisha malipo, tafadhali jaribu tena baadaye.';
+      modal.message = payNowResult.message || 'Huwezi kufanya malipo bila kuwa na laini ya Tigo au Airtel kwenye kifaa chako.';
     }
 
     isLoading.value = false;

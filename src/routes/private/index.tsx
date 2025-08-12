@@ -174,7 +174,7 @@ export default component$(() => {
             // { name: "Mengineyo", emoji: "🧿" },
             { name: "Madeni", emoji: "💳" },
             { name: "Matumizi", emoji: "💸" },
-            { name: "Ripoti", emoji: "📉" },
+            // { name: "Ripoti", emoji: "📉" },
             { name: "Bidhaa", emoji: "📦" },
             { name: "Wateja", emoji: "👥" },
             { name: "Zinazoulizwa", emoji: "⭐" },
@@ -252,10 +252,6 @@ export default component$(() => {
                 </div>
               )}
             </div>
-
-              <div class="relative">
-                <Typing />
-              </div>
             
             {/* tooltip  */}
             <div class="relative">
@@ -329,6 +325,15 @@ export default component$(() => {
                   </div>
                 </div>
               )}
+            </div>
+
+            <div class="relative">
+              <Typing />
+            </div>
+
+            {/* Receipt */}
+            <div class="relative text-xl pt-2" title="Oda nyingi ...">
+              ✍️
             </div>
 
 

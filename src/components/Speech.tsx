@@ -24,7 +24,7 @@ export const Speech = component$(() => {
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
-      error.value = 'SpeechRecognition API is not supported in this browser.';
+      error.value = 'Browser yako haisapoti, ibadilishe';
       return;
     }
 
@@ -60,19 +60,8 @@ export const Speech = component$(() => {
   const handleSend = $( async () => {
     isLoading.value = true;
 
-    const allowedActions = [
-      'nimeuza', 'niliuza', 'nilimuuzia','nauza', 'nimemuuzia',
-      'nimenunua', 'nimeongeza', 'niliagiza', 'nimemnunulia',
-      'nimetumia', 'nilitumia', 
-      'nimemkopesha', 'namkopesha', 'nilimkopesha'
-    ];
+    const text = transcript.value.trim();
 
-    let text = transcript.value.trim();
-    const firstWord = text.split(' ')[0].toLowerCase();
-
-    if (!allowedActions.includes(firstWord)) {
-      text = `nimeuza ${text}`;
-    }
     const api = new CrudService<{ id?: string; text: string }>("speech");
 
     const result = await api.create({ text });

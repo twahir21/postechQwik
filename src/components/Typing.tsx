@@ -90,24 +90,11 @@ const selectSuggestion = $((name: string) => {
 });
 
 
-
-
   const handleSubmit = $(async () => {
     isLoading.value = true;
-    const allowedActions = [
-      'nimeuza', 'niliuza', 'nilimuuzia','nauza', 'nimemuuzia',
-      'nimenunua', 'nimeongeza', 'niliagiza', 'nimemnunulia',
-      'nimetumia', 'nilitumia', 
-      'nimemkopesha', 'namkopesha', 'nilimkopesha'
-    ];
 
-    let text = inputText.value.trim();
+    const text = inputText.value.trim();
 
-    const firstWord = text.split(' ')[0].toLowerCase();
-
-    if (!allowedActions.includes(firstWord)) {
-      text = `nimeuza ${text}`;
-    }
     const api = new CrudService<{ id?: string; text: string }>("speech");
 
     const result = await api.create({ text });
@@ -131,9 +118,9 @@ const selectSuggestion = $((name: string) => {
       <button
         onClick$={togglePopup}
         class="text-xl pt-0.5 mt-1.5"
-        title="Andika..."
+        title="Oda moja..."
       >
-        ✍️
+        🚀
       </button>
 
       {showPopup.value && <div class="fixed top-16 right-0 w-full max-w-sm bg-[#EEEFE0] border p-4 rounded-xl shadow-md z-50">
@@ -161,7 +148,7 @@ const selectSuggestion = $((name: string) => {
       {/* Textarea + Autocomplete Dropdown */}
       <div class="relative">
         <textarea
-          placeholder="Mfano: nimemkopesha ali maziwa lita kumi na sita"
+          placeholder="Mfano: nimemkopesha ali maziwa lita kumi na sita au nimeuza ngano kilo 2"
           bind:value={inputText}
           rows={3}
           class="w-full p-2 rounded border text-lg bg-white"

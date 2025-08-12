@@ -1,11 +1,11 @@
-import { component$, useSignal, useComputed$, $, useStore } from '@builder.io/qwik';
+import { component$, useSignal, useComputed$, $, useStore, useVisibleTask$ } from '@builder.io/qwik';
 import { useLocation } from '@builder.io/qwik-city';
 import { CrudService } from '../api/base/oop';
 import type { PaymentRequest } from '../api/types/payTypes';
 import { Toast } from '~/components/ui/Toast';
 
 type PlanType = 'msingi' | 'lite';
-type PaymentMethod = 'TIGO-PESA' | 'AIRTEL-MONEY';
+type PaymentMethod = 'SIMU' | 'KADI';
 type Duration = 1 | 6 | 12;
 
 interface PlanDetails {
@@ -22,11 +22,13 @@ export default component$(() => {
     message: ''
   });
 
+  const isLoggedIn = useSignal(false);
+
   // Type-safe plan selection
   const params = new URLSearchParams(location.url.search);
   const plan = params.get('plan') as PlanType;
   const duration = useSignal<Duration>(1);
-  const paymentMethod = useSignal<PaymentMethod>('TIGO-PESA');
+  const paymentMethod = useSignal<PaymentMethod>('SIMU');
   const isLoading = useSignal(false);
 
   // Type-safe plan details
@@ -42,6 +44,13 @@ export default component$(() => {
     12: 0.15 
   };
 
+useVisibleTask$(async () => {
+  // func to check if user has logged in
+  const checkLoginApi = new CrudService("isLoggedIn");
+  const checkLoginRes = await checkLoginApi.get();
+
+  checkLoginRes.success ? isLoggedIn.value = true : isLoggedIn.value = false;
+});
 
 const isValidPlan = (plan: string): plan is PlanType =>
   ['msingi', 'lite'].includes(plan);
@@ -83,7 +92,12 @@ if (!isValidPlan(plan)) return (
 
     // 2. Check if USSD is available
     const payApi = new CrudService<PaymentRequest>("mobile/check-USSD");
-    const checkResult = await payApi.create({ price: totalPrice.value, duration: duration.value, paymentMethod: paymentMethod.value, plan: plan });
+    const checkResult = await payApi.create({ 
+      price: totalPrice.value, 
+      duration: duration.value, 
+      paymentMethod: paymentMethod.value, 
+      plan: plan
+    });
 
     if (!checkResult.success) {
       modal.isOpen = true;
@@ -136,7 +150,7 @@ return (
             <div class="mb-6">
               <label class="block mb-2 font-medium text-gray-700">Chagua njia ya malipo:</label>
               <div class="flex flex-wrap gap-4">
-                {(['TIGO-PESA', 'AIRTEL-MONEY'] as PaymentMethod[]).map((method) => (
+                {(['SIMU', 'KADI'] as PaymentMethod[]).map((method) => (
                   <label key={method} class="flex items-center gap-2 cursor-pointer">
                     <input 
                       type="radio" 
@@ -146,15 +160,78 @@ return (
                       onChange$={() => paymentMethod.value = method}
                       class="h-5 w-5 text-green-600 focus:ring-green-500"
                     />
-                    <img 
-                      src={`/${method === 'TIGO-PESA' ? 'yas.webp' : 'airtel.webp'}`} 
-                      alt={method === 'TIGO-PESA' ? 'Tigo Pesa' : 'Airtel Money'} 
-                      class={`w-23 h-auto ${method === 'TIGO-PESA' ? '' : 'w-20'} rounded-full`}
-                    />
+                    <span class="text-gray-700">{method}</span>
                   </label>
                 ))}
               </div>
+
+              {/* Add input fields based on payment method */}
+              {paymentMethod.value === 'SIMU' && (
+                <div class="mt-4">
+                  <label class="block mb-2 font-medium text-gray-700">Namba ya Simu:</label>
+                  <input
+                    type="tel"
+                    placeholder="255712345678"
+                    class="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    pattern="[0-9]{9,12}"
+                    required
+                  />
+                </div>
+              )}
+
+              {paymentMethod.value === 'KADI' && (
+                <div class="mt-4">
+                  <label class="block mb-2 font-medium text-gray-700">Namba ya Kadi:</label>
+                  <input
+                    type="text"
+                    placeholder="Ingiza namba ya kadi"
+                    class="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    pattern="[0-9]{16}"
+                    required
+                  />
+                  <div class="grid grid-cols-2 gap-4 mt-2">
+                    <div>
+                      <label class="block mb-1 text-sm text-gray-700">Tarehe ya kumalizika:</label>
+                      <input
+                        type="text"
+                        placeholder="MM/YY"
+                        class="w-full border border-gray-300 p-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        pattern="\d{2}/\d{2}"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label class="block mb-1 text-sm text-gray-700">Namba ya usalama (CVV):</label>
+                      <input
+                        type="text"
+                        placeholder="123"
+                        class="w-full border border-gray-300 p-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        pattern="\d{3,4}"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
+            
+            {/* Show login prompt if not logged in */}
+            {!isLoggedIn.value && (
+              <div class="text-center my-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p class="text-yellow-800 font-medium mb-3">
+                  Unapaswa kuingia kwenye akaunti yako!
+                </p>
+                <a 
+                  href="/auth" 
+                  class="inline-block px-6 py-2 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold rounded-lg shadow-md transition-colors duration-200"
+                >
+                  Ingia Sasa
+                </a>
+                <p class="text-sm text-yellow-700 mt-2">
+                  Ili kuendelea na malipo, tafadhali ingia kwenye akaunti yako
+                </p>
+              </div>
+            )}
 
             <div class="bg-gray-50 border border-gray-700 p-4 rounded-lg mb-6">
               <p class="text-lg font-semibold text-center text-blue-950">
